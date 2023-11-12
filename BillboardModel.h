@@ -12,7 +12,7 @@ public:
 	Billboard* billboards;
 	int numBillboards;
 
-	void CreateBillboardModelFromRegularModel(float* vertices, float* uvs, float* normals);
+	int CreateBillboardModelFromRegularModel(int numVertices, float* vertices, float* uvs, float* normals, GzTextureStruct* texture);
 
 
 
