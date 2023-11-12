@@ -133,6 +133,8 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Application5.cpp" />
+    <ClCompile Include="Billboard.cpp" />
+    <ClCompile Include="BillboardModel.cpp" />
     <ClCompile Include="CS580HW.cpp" />
     <ClCompile Include="CS580HWDoc.cpp" />
     <ClCompile Include="CS580HWView.cpp" />
@@ -155,6 +157,8 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="Application5.h" />
+    <ClInclude Include="Billboard.h" />
+    <ClInclude Include="BillboardModel.h" />
     <ClInclude Include="CS580HW.h" />
     <ClInclude Include="CS580HWDoc.h" />
     <ClInclude Include="CS580HWView.h" />
