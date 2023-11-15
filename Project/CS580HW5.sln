@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33927.289
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CS580HW5", "CS580HW5.vcxproj", "{01CF91CE-E83B-4491-A0A8-233610C9CA3D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{01CF91CE-E83B-4491-A0A8-233610C9CA3D}.Debug|x86.ActiveCfg = Debug|Win32
+		{01CF91CE-E83B-4491-A0A8-233610C9CA3D}.Debug|x86.Build.0 = Debug|Win32
+		{01CF91CE-E83B-4491-A0A8-233610C9CA3D}.Release|x86.ActiveCfg = Release|Win32
+		{01CF91CE-E83B-4491-A0A8-233610C9CA3D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A80D90C9-0643-4A36-B417-38E7EE86556F}
+	EndGlobalSection
+EndGlobal
