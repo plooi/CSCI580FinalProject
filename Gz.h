@@ -138,14 +138,21 @@ typedef struct GzTextureStruct
 	int textureHeight;
 
 	int floor(float f){return (int)f;}
-	int ceil(float f){if (f == ((int)f))return f; return ((int)f) + 1;}
+	int ceil(float f){if (f == ((int)f))return (int)f; return ((int)f) + 1;}
 
 	void Sample(float u, float v, GzColor dest)
 	{
 		if (u > 1) u = 1;if (u < 0) u = 0;if (v > 1) v = 1;if (v < 0) v = 0;
+		if (textureWidth <= 0 || textureHeight <= 0)
+		{
+			dest[RED] = 0;
+			dest[GREEN] = 0;
+			dest[BLUE] = 0;
+			return;
+		}
 
-		float xPixel = u * textureWidth;
-		float yPixel = v * textureHeight;
+		float xPixel = u * (textureWidth - 1);
+		float yPixel = v * (textureHeight - 1);
 		if (xPixel > textureWidth - 1) xPixel = textureWidth - 1;
 		if (yPixel > textureHeight - 1) yPixel = textureHeight - 1;
 

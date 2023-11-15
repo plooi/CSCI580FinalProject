@@ -1,16 +1,19 @@
 #include "stdafx.h"
 #include "BillboardModel.h"
+#include "rend.h"
 
 
 GzTextureStruct currentTexture;
 
-int tex_fun(float u, float v, GzColor color)
+int tempTextureFunction(float u, float v, GzColor color)
 {
 	currentTexture.Sample(u, v, color);
+
+	return GZ_SUCCESS;
 }
 
 
-int BillboardModel::CreateBillboardModelFromRegularModel(int numVertices, float* vertices, float* uvs, float* normals, GzTextureStruct* texture)
+int BillboardModel::CreateBillboardModelFromRegularModel(int numVertices, float* vertices, float* uvs, float* normals, GzTextureStruct* texture, int width, int height)
 {
 	//1. Create a gzRenderer object
 	//3. Load the texture into the static buffer (which is currentTexture)
@@ -22,6 +25,15 @@ int BillboardModel::CreateBillboardModelFromRegularModel(int numVertices, float*
 	//8. Somehow get ahold of the image space version of the output and create a billboard texture with that image. Calculate bump map using the z buffer and calculate normals by looking at neighboring heights
 	//9. add that information to this object's fields
 	//10. repeat steps 6-9 for each angle of the model that you want to create a billboard for
+	GzRender* renderer = new GzRender(width, height);
+
+	renderer->GzDefault();
 
 
+	//setup camera
+
+
+
+	renderer->GzBeginRender();
+	return GZ_SUCCESS;
 }
