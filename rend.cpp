@@ -226,14 +226,19 @@ GzRender::~GzRender()
 	delete[] pixelbuffer;
 }
 
+
 int GzRender::GzDefault()
+{
+	return GzDefault(174 * 16, 230 * 16, 234 * 16);
+}
+int GzRender::GzDefault(int backgroundR, int backgroundG, int backgroundB)
 {
 	/* HW1.3 set pixel buffer to some default values - start a new frame */
 
 		// RGB values are for a light blue color (8-bit version: 174,230,234)
-	GzIntensity r = 174 * 16;
-	GzIntensity g = 230 * 16;
-	GzIntensity b = 234 * 16;
+	GzIntensity r = backgroundR;
+	GzIntensity g = backgroundG;
+	GzIntensity b = backgroundB;
 
 	GzPixel tempPixel = {
 		r,		// red
@@ -729,29 +734,29 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 		{
 			switch (nameList[np])
 			{
-				case GZ_NULL_TOKEN:
-				{
-					// do nothing
-				}
-				case GZ_POSITION:
-				{
-					vert_mat[X][k] = ((GzCoord*)valueList[np])[k][X]; // X
-					vert_mat[Y][k] = ((GzCoord*)valueList[np])[k][Y]; // Y
-					vert_mat[Z][k] = ((GzCoord*)valueList[np])[k][Z]; // Z
-					vert_mat[3][k] = 1.0f;
-				}
-				case GZ_NORMAL:
-				{
-					norm_mat[X][k] = ((GzCoord*)valueList[np])[k][X]; // X
-					norm_mat[Y][k] = ((GzCoord*)valueList[np])[k][Y]; // Y
-					norm_mat[Z][k] = ((GzCoord*)valueList[np])[k][Z]; // Z
-					norm_mat[3][k] = 1.0f;
-				}
-				case GZ_TEXTURE_INDEX:
-				{
-					uv_mat[k][U] = ((GzTextureIndex*)valueList[np])[k][U]; // U
-					uv_mat[k][V] = ((GzTextureIndex*)valueList[np])[k][V]; // V
-				}
+			case GZ_NULL_TOKEN:
+			{
+				// do nothing
+			}
+			case GZ_POSITION:
+			{
+				vert_mat[X][k] = ((GzCoord*)valueList[np])[k][X]; // X
+				vert_mat[Y][k] = ((GzCoord*)valueList[np])[k][Y]; // Y
+				vert_mat[Z][k] = ((GzCoord*)valueList[np])[k][Z]; // Z
+				vert_mat[3][k] = 1.0f;
+			}
+			case GZ_NORMAL:
+			{
+				norm_mat[X][k] = ((GzCoord*)valueList[np])[k][X]; // X
+				norm_mat[Y][k] = ((GzCoord*)valueList[np])[k][Y]; // Y
+				norm_mat[Z][k] = ((GzCoord*)valueList[np])[k][Z]; // Z
+				norm_mat[3][k] = 1.0f;
+			}
+			case GZ_TEXTURE_INDEX:
+			{
+				uv_mat[k][U] = ((GzTextureIndex*)valueList[np])[k][U]; // U
+				uv_mat[k][V] = ((GzTextureIndex*)valueList[np])[k][V]; // V
+			}
 			}
 		}
 
@@ -963,7 +968,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 						// Find blue color via interpolation
 						float blue_color_interp = -(plane_D_color + plane_normal_color[0] * (float)pixel_x + plane_normal_color[1] * (float)pixel_y) / plane_normal_color[2];
-						
+
 
 						// Texture UV Mapping
 
@@ -1018,12 +1023,17 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 							// Texture look up
 							tex_fun(u_interp, v_interp, uv_color);
 
+							//dont draw this pixel if this point on the texture is transparent
+							if (uv_color[0] == -1 && uv_color[1] == -1 && uv_color[2] == -1)
+								continue;
+
+
 							// Multiply calculated color with uv colors
 							red_color_interp *= uv_color[RED];
 							green_color_interp *= uv_color[GREEN];
 							blue_color_interp *= uv_color[BLUE];
 						}
-						
+
 						r = ctoi(red_color_interp);
 						g = ctoi(green_color_interp);
 						b = ctoi(blue_color_interp);
@@ -1146,6 +1156,10 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 							// Texture look up
 							tex_fun(u_interp, v_interp, uv_color);
+
+							//dont draw this pixel if this point on the texture is transparent
+							if (uv_color[0] == -1 && uv_color[1] == -1 && uv_color[2] == -1)
+								continue;
 
 							// Ka and Kd equal to texture color
 							Ka[RED] = uv_color[RED];

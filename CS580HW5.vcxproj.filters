@@ -54,7 +54,7 @@
     <ClCompile Include="Billboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BillboardModel.cpp">
+    <ClCompile Include="Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,7 +106,7 @@
     <ClInclude Include="Billboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BillboardModel.h">
+    <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

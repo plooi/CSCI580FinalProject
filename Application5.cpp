@@ -11,6 +11,8 @@
 #include "Application5.h"
 #include "Gz.h"
 #include "rend.h"
+#include "Billboard.h"
+#include "Utils.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -38,9 +40,98 @@ float AAFilter[AAKERNEL_SIZE][3] 		/* X-shift, Y-shift, weight */
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-Application5::Application5()
+
+/*
+This function creates a test dummy texture just so that the model can be rendered with a texture
+*/
+void InitTexture(GzTextureStruct* texture)
+{
+	texture->pixels = (GzColor*)malloc(4 * sizeof(GzColor));
+
+	SetVector3(texture->pixels[0], 1, 1, 1);
+	SetVector3(texture->pixels[1], 0,0,0);
+	SetVector3(texture->pixels[2], 1, 0, 0);
+	SetVector3(texture->pixels[3], 0, 0, 11);
+
+	texture->textureWidth = 2;
+	texture->textureHeight = 2;
+}
+
+/*
+Test function for setting up a test demo model and converting it into a billboard
+*/
+void Main()
 {
 
+
+	Billboard* b = new Billboard();
+
+	int numTriangles = 2;
+	float vertices[] = { -1, -1, 0, -1, 1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, 1, -1, 15 };
+	float uvs[] = { 0,1, 0,0, 1,0, 0,1, 1,0, 1,1 };
+	float normals[] = { 0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1 };
+
+
+	GzTextureStruct texture;
+	texture.InitFromPPMFile("texture");
+	//InitTexture(&texture);
+	/*Println("Texture created");
+	PrintInt(texture.textureWidth);
+	Println("\n");*/
+
+	int billboardWidthPixels = 100;
+	int billboardHeightPixels = 100;
+	GzLight ambientLight;
+	SetVector3(ambientLight.direction, 0, 0, 0);
+	SetVector3(ambientLight.color, 1, 1, 1);
+	GzLight lights[1];
+	SetVector3(lights[0].color, 0.0f, 0.0f, 0.0f);
+	SetVector3(lights[0].direction, 0, 0, -1);
+	int numLights = 1;
+	GzColor ambientCoefficient;
+	SetVector3(ambientCoefficient, 1, 1, 1);
+	GzColor specularCoefficient;
+	SetVector3(specularCoefficient, 1, 1, 1);
+	GzColor diffuseCoefficient;
+	SetVector3(diffuseCoefficient, 1, 1, 1);
+	float specpower = 32;
+
+
+
+	b->CreateFromModel(
+		numTriangles,
+		vertices,
+		uvs,
+		normals,
+		&texture,
+		billboardWidthPixels,
+		billboardHeightPixels,
+		&ambientLight,
+		lights,
+		numLights,
+		ambientCoefficient,
+		specularCoefficient,
+		diffuseCoefficient,
+		specpower
+	);
+
+	Println("Finished");
+
+}
+Application5::Application5()
+{
+	PrintingInit();
+	Main();
+	
+
+
+
+
+
+
+
+
+	
 }
 
 Application5::~Application5()
@@ -50,8 +141,8 @@ Application5::~Application5()
 
 int Application5::Initialize()
 {
-	GzCamera	camera;  
-	int		    xRes, yRes;	/* display parameters */ 
+	GzCamera	camera;
+	int		    xRes, yRes;	/* display parameters */
 
 	GzToken		nameListShader[9]; 	    /* shader attribute names */
 	GzPointer   valueListShader[9];		/* shader attribute pointers */
@@ -61,19 +152,19 @@ int Application5::Initialize()
 	GzPointer	valueListOffset[2];		/* Offset attribute pointers */
 	int			shaderType, interpStyle;
 	float		specpower;
-	int		status; 
- 
-	status = 0; 
+	int		status;
 
-	/* 
+	status = 0;
+
+	/*
 	 * Allocate memory for user input
 	 */
 	m_pUserInput = new GzInput;
 
-	/* 
-	 * initialize the display and the renderer 
-	 */ 
- 	m_nWidth = 256;		// frame buffer and display width
+	/*
+	 * initialize the display and the renderer
+	 */
+	m_nWidth = 256;		// frame buffer and display width
 	m_nHeight = 256;    // frame buffer and display height
 
 	// loop over each renderer for antialiasing
@@ -181,11 +272,11 @@ int Application5::Initialize()
 		valueListShader[4] = (GzPointer)&specpower;
 
 		nameListShader[5] = GZ_TEXTURE_MAP;
-		#if 0   /* set up null texture function or valid pointer */
-			valueListShader[5] = (GzPointer)0;
-		#else
-			valueListShader[5] = (GzPointer)(tex_fun);	/* or use ptex_fun */
-		#endif
+#if 0   /* set up null texture function or valid pointer */
+		valueListShader[5] = (GzPointer)0;
+#else
+		valueListShader[5] = (GzPointer)(tex_fun);	/* or use ptex_fun */
+#endif
 		status |= m_pRender[i]->GzPutAttribute(6, nameListShader, valueListShader);
 
 		// shift amounts
@@ -199,9 +290,9 @@ int Application5::Initialize()
 		}
 
 		nameListOffset[0] = GZ_AASHIFTX;
-		valueListOffset[0] = (GzPointer) & shiftX;
+		valueListOffset[0] = (GzPointer)&shiftX;
 		nameListOffset[1] = GZ_AASHIFTY;
-		valueListOffset[1] = (GzPointer) & shiftY;
+		valueListOffset[1] = (GzPointer)&shiftY;
 
 		status |= m_pRender[i]->GzPutAttribute(2, nameListOffset, valueListOffset);
 
@@ -212,23 +303,23 @@ int Application5::Initialize()
 
 	m_pFrameBuffer = m_pRender[AAKERNEL_SIZE]->framebuffer;
 
-	if (status) exit(GZ_FAILURE); 
+	if (status) exit(GZ_FAILURE);
 
-	if (status) 
-		return(GZ_FAILURE); 
-	else 
-		return(GZ_SUCCESS); 
+	if (status)
+		return(GZ_FAILURE);
+	else
+		return(GZ_SUCCESS);
 }
 
 int Application5::Render() 
 {
 	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
 	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
-	GzCoord		vertexList[3];	/* vertex position coordinates */ 
-	GzCoord		normalList[3];	/* vertex normals */ 
-	GzTextureIndex  	uvList[3];		/* vertex texture map indices */ 
-	char		dummy[256]; 
-	int			status; 
+	GzCoord		vertexList[3];	/* vertex position coordinates */
+	GzCoord		normalList[3];	/* vertex normals */
+	GzTextureIndex  	uvList[3];		/* vertex texture map indices */
+	char		dummy[256];
+	int			status;
 
 
 	/* Initialize Display for each rendered */
@@ -346,20 +437,20 @@ int Application5::Render()
 
 int Application5::Clean()
 {
-	/* 
-	 * Clean up and exit 
-	 */ 
-	int	status = 0; 
+	/*
+	 * Clean up and exit
+	 */
+	int	status = 0;
 
 	// clear all renderers
 	for (int i = 0; i <= AAKERNEL_SIZE; i++)
 		delete(m_pRender[i]);
 
 	status |= GzFreeTexture();
-	
-	if (status) 
-		return(GZ_FAILURE); 
-	else 
+
+	if (status)
+		return(GZ_FAILURE);
+	else
 		return(GZ_SUCCESS);
 }
 

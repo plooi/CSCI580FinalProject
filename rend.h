@@ -53,6 +53,8 @@ public:
 
 	// HW1: Display methods
 	int GzDefault();
+
+	int GzDefault(int backgroundR, int backgroundG, int backgroundB);
 	int GzBeginRender();
 	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
 	int GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth	*z);
