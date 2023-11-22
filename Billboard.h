@@ -1,45 +1,88 @@
 #pragma once
 #include "gz.h"
+#include "rend.h"
+#include "Utils.h"
 
 /*
 Billboard: Each object of this class represents a single billboard that is rendered at a specific location
 
 
 To create a Billboard from a 3D model, first use the empty constructor
-	Billboard* billboard = new Billboard();
+	Billboard* billboard;
 
-Then, call the CreateFromModel method to load and render a given model
+Then, call the CreateFromModel method ( billboard.CreateFromModel(...) )
+to load and render a given model
 and then copy the rendered image into this billboard object. Now, this 
 billboard has a 2D image of the model stored, and whenever we ask to 
 render this billboard in the world, it will render that 2D image of 
 the model.
 
+CreateFromModel(
+		int numTriangles,
+		float* vertices,
+		float* uvs,
+		float* normals,
+		GzTextureStruct* texture,
+		int billboardWidthPixels,
+		int billboardHeightPixels,
+		GzLight ambientLight,
+		GzLight* lights,
+		int numLights,
+		GzColor ambientCoefficient,
+		GzColor specularCoefficient,
+		GzColor diffuseCoefficient,
+		float specpower,
+		float xRotation,//radians
+		float yRotation//radians
+	)
+	'numTriangles' is the number of triangles that are in this model
+	'vertices' buffer contains vertex coordinates in the form of x1, y1, z1, x2, y2, z2, x3, y3....
+		length of this buffer must be 'numTriangles'*9
+	'uvs' buffer for uv coordinates in the form of u1, v1, u2, v2... 
+		length must = 'numTriangles' * 6
+	'normals' buffer for normals in the form of point1xnorm, point1ynorm, point1znorm, point2xnorm, point2ynorm, point2znorm...
+		length must = 'numTriangles' * 9
+	'texture' The texture referenced by all uv coordinates of every triangle in the model
+	'billboardWidthPixels' and 'billboardHeightPixels'
+		The resolution of the texutre on the billboard (which is going to be created)
+	'ambientLight' ambientLight used to render model onto the billboard
+	'lights' directional lights used to render model onto the billboard
+	'numLights' number of directional lights
+	'specpower' specular power
+	'xRotation' model x rotation for rendering to billboard aka what perspective of the model 
+		does the billboard show (RADIANS)
+	'yRotation' model x rotation for rendering to billboard aka what perspective of the model 
+		does the billboard show (RADIANS)
 
-	billboard->CreateFromModel(
-		numTriangles,
-		vertices,
-		uvs,
-		normals,
-		&texture,
-		billboardWidthPixels,
-		billboardHeightPixels,
-		&ambientLight,
-		lights,
-		numLights,
-		ambientCoefficient,
-		specularCoefficient,
-		diffuseCoefficient,
-		specpower
-	);
 
 
 Next, call SetLocation to specify where in the world this billboard should be rendered, 
-call SetRotation to specify which direction it's facing, and call SetDimensions to specify
-how large (in world space) the billboard should be
+call SetRotation to specify which direction the billboard faces in 
+the world, and call SetDimensions to specify how large (in world space) 
+the billboard should be
+
+For the next step, it is required that a GzRender object is already set up using
+	renderer->GzDefault()
+	renderer->GzPutCamera(...)
+	renderer->GzBeginRender()
+
+	renderer->GzPutAttribute 
+		to add lights and aafilter offset (need at least 1 directional light i believe)
+
+	then you call billboardObject.BillboardDraw(renderer)
+
+
+*******************IMPORTANT*************************
+For clarification:
+	xRotation and yRotation parameters in CreateFromModel specify how much you want to 
+	rotate the model before it is rendered onto the billboard
+
+	xRotation and yRotation in SetRotation specify how much you want the billboard 
+	plane itself to be rotated when it is drawn into the scene
+
 */
 
 
-void SetVector3(float* vector, float a, float b, float c);
 class Billboard
 {
 public:
@@ -70,7 +113,7 @@ public:
 	float xRotation;
 
 
-
+	
 
 
 
@@ -92,9 +135,16 @@ public:
 		GzColor ambientCoefficient,
 		GzColor specularCoefficient,
 		GzColor diffuseCoefficient,
-		float specpower
+		float specpower,
+
+		float xRotation,
+		float yRotation
 	);
 
+	
+
+	void BillboardDraw(GzRender* renderer);
+	
 
 
 	Billboard()
@@ -126,46 +176,10 @@ public:
 	float GetXRotation() { return xRotation; }
 	GzTextureStruct* GetTexture() { return texture; }
 	void SetLocation(GzCoord _location){SetVector3(location, _location[0], _location[1], _location[2]);}
-	void SetRotation(float yRotation, float xRotation) { this->xRotation = xRotation; this->yRotation = yRotation; }
+	void SetRotation(float yRotation, float xRotation) { this->xRotation = xRotation; this->yRotation = -yRotation; }
 	void SetDimensions(float width, float height) { this->width = width; this->height = height; }
 	
 
-	
-
-	
-
-
-
-
-
-	/*
-	
-	
-	
-	***IGNORE THIS COMMENTED CODE IT DOESNT EXIST YOU SAW NOTHING***
-
-	float* bumpMap;
-	int bumpMapWidth;
-	int bumpMapHeight;
-
-	//TODO: THIS SHOULD INTERPOLATE, as well as return GZ_FAILURE on failure
-	float GetBumpMap(int r, int c)
-	{
-		if (r < 0 || r >= bumpMapHeight || c < 0 || c >= bumpMapWidth) throw "Invalid index";
-		return bumpMap[r * bumpMapWidth + c];
-	}
-
-
-	GzCoord* normalMap;
-	int normalMapWidth;
-	int normalMapHeight;
-
-	//TODO: THIS SHOULD INTERPOLATE, as well as return GZ_FAILURE on failure
-	GzCoord* GetNormalMap(int r, int c)
-	{
-		if (r < 0 || r >= normalMapHeight || c < 0 || c >= normalMapWidth) throw "Invalid index";
-		return normalMap + (r * normalMapWidth + c);
-	}*/
 
 };
 

@@ -5,6 +5,7 @@
 #include	"math.h"
 #include	"Gz.h"
 #include	"rend.h"
+#include "Utils.h"
 
 // iostream
 #include <iostream>
@@ -791,6 +792,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 		vert[k][Y] += Yoffset;
 	}
 
+	/*
+	Print("Vertices are ");
+	PrintCoord(vert[0]);
+	PrintCoord(vert[1]);
+	PrintCoord(vert[2]);
+	Println("");*/
+
 	// Evaluate lighting equation to calculate color at each vertex
 	GzColor vert_intensity[3] = { 0.0f };
 	calculateLightingColorsThreeVertices(norms, Ka, Kd, Ks, ambientlight, lights, numlights, spec, vert_intensity);
@@ -839,6 +847,15 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 			float edge2_eval = edge2_param[0] * (float)pixel_x + edge2_param[1] * (float)pixel_y + edge2_param[2];
 			float edge3_eval = edge3_param[0] * (float)pixel_x + edge3_param[1] * (float)pixel_y + edge3_param[2];
 
+
+			//Peter's addition to help with the edge sharing problem
+			//if the pixel lies on an edge, "move" it a bit to the right and then evaluate the edge equation again at that new location
+			//note this doesn't work with horizontal lines
+			if (edge1_eval == 0) edge1_eval = edge1_param[0] * (float)(pixel_x+.1f) + edge1_param[1] * (float)pixel_y + edge1_param[2];
+			if (edge2_eval == 0) edge2_eval = edge2_param[0] * (float)(pixel_x+.1f) + edge2_param[1] * (float)pixel_y + edge2_param[2];
+			if (edge3_eval == 0) edge3_eval = edge3_param[0] * (float)(pixel_x+.1f) + edge3_param[1] * (float)pixel_y + edge3_param[2];
+
+
 			// Determine whether signes of all evaluations are consistent
 			bool signs_consistent = (edge1_eval > 0.0f && edge2_eval > 0.0f && edge3_eval > 0.0f) ||
 				(edge1_eval < 0.0f && edge2_eval < 0.0f && edge3_eval < 0.0f);
@@ -853,7 +870,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 			bool on_edge2 = edge2_eval == 0.0f && edge1_eval * edge3_eval > 0.0f && sort_vert[1][Y] >= sort_vert[2][Y];
 
 			// if the pixel inside the triangle
-			if (signs_consistent || on_edge3 || on_edge2)
+			//if (signs_consistent || on_edge3 || on_edge2)
+
+
+			
+			//if (signs_consistent || edge1_eval == 0 || edge2_eval == 0 || edge3_eval == 0)
+			if(signs_consistent)
 			{
 				float plane_normal[3];
 
@@ -1043,6 +1065,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 					// Phong shading
 					case GZ_NORMALS:
 					{
+						//Println("interpolating normals");
 						GzCoord vert_phong[3] = { 0.0f };
 						float plane_normal_phong[3];
 						float plane_D_phong;
@@ -1109,6 +1132,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 						// if texture function is not a NULL pointer
 						if (tex_fun != NULL)
 						{
+							
 							GzColor uv_color;
 							float z_interp_prime = (float)z_interp / ((float)MAXINT - (float)z_interp);
 
@@ -1156,6 +1180,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 							// Texture look up
 							tex_fun(u_interp, v_interp, uv_color);
+							/*
+							Print("UV coordinates");
+							PrintFloat(u_interp);
+							Print(" ");
+							PrintFloat(v_interp);
+							Println("");
+
+							Print("Texture function returned ");
+							PrintCoord(uv_color);
+							Println("");*/
 
 							//dont draw this pixel if this point on the texture is transparent
 							if (uv_color[0] == -1 && uv_color[1] == -1 && uv_color[2] == -1)
@@ -1177,6 +1211,14 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 						normalizeVector(norm_interp);
 						calculateLightingColor(norm_interp, Ka, Kd, Ks, ambientlight, lights, numlights, spec, norm_intensity);
 
+
+						/*
+						Print("Drawing color ");
+						PrintCoord(norm_intensity);
+						Println("");
+						*/
+
+
 						r = ctoi(norm_intensity[0]);
 						g = ctoi(norm_intensity[1]);
 						b = ctoi(norm_intensity[2]);
@@ -1184,6 +1226,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 						break;
 					}
 					}
+
+
+
+
+
 					// Pass the values to the buffer
 					GzPut(pixel_x, pixel_y, r, g, b, a, (int)z_interp);
 				}
