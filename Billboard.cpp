@@ -7,6 +7,7 @@
 GzTextureStruct* modelTexture;
 
 void SetVector3(float* vector, float a, float b, float c);
+void rotateCoord(GzCoord coord, GzMatrix mat);
 
 int billboardTextureFunction(float u, float v, GzColor color)
 {
@@ -226,4 +227,186 @@ Billboard* Billboard::CreateFromModel(
 	
 	
 		
+}
+
+void Billboard::Draw(GzRender* renderer) {
+    /*
+     * Set up
+     */
+
+    GzToken		nameListTriangle[3]; 	/* vertex attribute names */
+    GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
+    GzCoord		vertexList[3];	/* vertex position coordinates */
+    GzCoord		normalList[3];	/* vertex normals */
+    GzTextureIndex  	uvList[3];		/* vertex texture map indices */
+
+    GzCoord     billboardVertices[4]; /* vertex positions for the billboard to be calculated */
+    GzCoord     billboardNormal; /* normal direction to the billboard */
+    // Billboard vertices indexed as shown below, so that 0,1,2 and 1,2,3 are the two sub-triangles
+    /*
+     * 0--------------1
+     * |              |
+     * |              |
+     * 2--------------3
+     */
+
+    GzMatrix    rotXMat; /* matrix for x rotation */
+    GzMatrix    rotYMat; /* matrix for y rotation */
+    GzMatrix    rotation;
+
+    /*
+     * triangle tokens
+     */
+
+    nameListTriangle[0] = GZ_POSITION;
+    nameListTriangle[1] = GZ_NORMAL;
+    nameListTriangle[2] = GZ_TEXTURE_INDEX;
+
+    /*
+     * rotations
+     */
+
+    // x rotation
+    rotXMat[0][0] = 1.0f;
+    rotXMat[1][1] = (float)cos(this->GetXRotation());
+    rotXMat[1][2] = (float)-sin(this->GetXRotation());
+    rotXMat[2][1] = (float)sin(this->GetXRotation());
+    rotXMat[2][2] = (float)cos(this->GetXRotation());
+    rotXMat[3][3] = 1.0f;
+
+    // y rotation
+    rotYMat[1][1] = 1.0;
+    rotYMat[0][0] = (float)cos(this->GetYRotation());
+    rotYMat[2][0] = (float)-sin(this->GetYRotation());
+    rotYMat[0][2] = (float)sin(this->GetYRotation());
+    rotYMat[2][2] = (float)cos(this->GetYRotation());
+    rotYMat[3][3] = 1.0f;
+
+    // total rotation (multiplying matrices)
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            // temporary variable to keep the sum from the vector vector multiplication
+            float temp_sum = 0.0f;
+
+            for (int k = 0; k < 4; k++)
+            {
+                temp_sum += rotYMat[i][k] * rotXMat[k][j];
+            }
+
+            rotation[i][j] = temp_sum;
+        }
+    }
+
+    /*
+     * determining billboard normals
+     * all vertices should have the same normal
+     */
+    // no rotation => x = 0, y = 0, z = -1;
+    billboardNormal[0] = 0;
+    billboardNormal[0] = 0;
+    billboardNormal[0] = -1;
+
+    rotateCoord( billboardNormal, rotation);
+
+    /*
+     * determining billboard vertices
+     */
+
+    // before rotation
+
+    //vertex 0
+    billboardVertices[0][0] = - (this->GetWidth() / 2.0f);
+    billboardVertices[0][1] = (this->GetHeight() / 2.0f);
+    billboardVertices[0][2] = 0;
+
+    //vertex 1
+    billboardVertices[1][0] = (this->GetWidth() / 2.0f);
+    billboardVertices[1][1] = (this->GetHeight() / 2.0f);
+    billboardVertices[1][2] = 0;
+
+    //vertex 2
+    billboardVertices[2][0] = - (this->GetWidth() / 2.0f);
+    billboardVertices[2][1] = - (this->GetHeight() / 2.0f);
+    billboardVertices[2][2] = 0;
+
+    //vertex 3
+    billboardVertices[3][0] = (this->GetWidth() / 2.0f);
+    billboardVertices[3][1] = - (this->GetHeight() / 2.0f);
+    billboardVertices[3][2] = 0;
+
+    // rotation about middle of billboard
+
+    for (int i = 0; i < 4; i++) {
+        rotateCoord(billboardVertices[i], rotation);
+    }
+
+    /*
+     * triangle values
+     */
+
+    int numTriangles = 2;
+    int numVertices = 3;
+    int numCoords = 3;
+    for (int i = 0; i < numTriangles; i++) {
+        for (int j = 0; j < numVertices; j++) {
+            for (int k = 0; k < numCoords; k++) {
+                vertexList[j][k] = billboardVertices[j + i][k];
+                normalList[j][k] = billboardNormal;
+            }
+        }
+        // triangle 1 (vertices 0,1,2)
+        if (i == 0) {
+            //vertex 0
+            uvList[0][0] = 0;
+            uvList[0][1] = 0;
+            //vertex 1
+            uvlist[1][0] = 1;
+            uvList[1][1] = 0;
+            //vertex 2
+            uvList[2][0] = 0;
+            uvList[2][1] = 1;
+        }
+        // triangle 2 (vertices 1,2,3)
+        else {
+            //vertex 1
+            uvlist[0][0] = 1;
+            uvList[0][1] = 0;
+            //vertex 2
+            uvList[1][0] = 0;
+            uvList[1][1] = 1;
+            //vertex 3
+            uvList[2][0] = 1;
+            uvList[2][1] = 1;
+        }
+
+        valueListTriangle[0] = (GzPointer)vertexList;
+        valueListTriangle[1] = (GzPointer)normalList;
+        valueListTriangle[2] = (GzPointer)uvList;
+
+        renderer->GzPutTriangle(3, nameListTriangle, valueListTriangle);
+
+    }
+}
+
+void rotateCoord(GzCoord coord, GzMatrix mat) {
+    float inVector[4];
+    float outVector[4];
+
+    for (int i = 0; i < 3; i++) {
+        inVector[i] = coord[i];
+    }
+    inVector[3] = 1;
+
+    for (int i = 0; i < 4; i++) {
+        outVector[i] = 0;
+        for (int j = 0; j < 4; j++) {
+            outVector[i] += mat[i][j] * inVector[j];
+        }
+    }
+
+    for (int i = 0; i < 3; i++) {
+        coord[i] = outVector[i] / outVector[3];
+    }
 }
