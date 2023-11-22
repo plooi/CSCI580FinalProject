@@ -35,6 +35,7 @@
 
 #define	GZ_TEXTURE_MAP			1010	/* pointer to texture routine */
 #define	GZ_TEXTURE_NORMAL_MAP	1011
+#define	GZ_TEXTURE_DISPLACEMENT_MAP	1012
 
 /*
  * flags fields for value list attributes

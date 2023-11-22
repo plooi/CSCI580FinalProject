@@ -18,12 +18,13 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define INFILE  "ppot.asc"
+#define INFILE  "rect.asc"
 #define OUTFILE "output.ppm"
-
+#define PI 3.14159
 
 extern int tex_fun(float u, float v, GzColor color); /* image texture function */
 extern int tex_norm_fun(float u, float v, GzColor color);
+extern int tex_displacement_fun(float u, float v, GzColor height);
 extern int ptex_fun(float u, float v, GzColor color); /* procedural texture function */
 extern int GzFreeTexture();
 
@@ -84,29 +85,69 @@ int Application5::Initialize()
 		m_pRender[i]->GzDefault();
 
 		/* Translation matrix */
-		GzMatrix	scale =
+		/*GzMatrix	scale =
 		{
 			3.25,	0.0,	0.0,	0.0,
 			0.0,	3.25,	0.0,	-3.25,
 			0.0,	0.0,	3.25,	3.5,
 			0.0,	0.0,	0.0,	1.0
+		};*/
+
+		/*GzMatrix	scale =
+		{
+			13.25,	0.0,	0.0,	40.0,
+			0.0,	13.25,	0.0,	70,
+			0.0,	0.0,	13.25,	220,
+			0.0,	0.0,	0.0,	1.0
+		};*/
+
+		GzMatrix	scale =
+		{
+			3.25,	0.0,	0.0,	10.0,
+			0.0,	3.25,	0.0,	10,
+			0.0,	0.0,	3.25,	50,
+			0.0,	0.0,	0.0,	1.0
 		};
 
-		GzMatrix	rotateX =
+		/*GzMatrix	rotateX =
 		{
 			1.0,	0.0,	0.0,	0.0,
 			0.0,	.7071,	.7071,	0.0,
 			0.0,	-.7071,	.7071,	0.0,
 			0.0,	0.0,	0.0,	1.0
+		};*/
+		int degree = 250;
+		GzMatrix rotateX =
+		{
+			1.0, 0.0, 0.0, 0.0,
+			0.0, cos(degree * PI / 180), -sin(degree * PI / 180), 0.0,
+			0.0, sin(degree * PI / 180), cos(degree * PI / 180), 0.0,
+			0.0, 0.0, 0.0, 1.0
+		};
+		degree = 60;
+		GzMatrix rotateY =
+		{
+			cos(degree * PI / 180), 0.0, sin(degree * PI / 180), 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			-sin(degree * PI / 180), 0.0, cos(degree * PI / 180), 0.0,
+			0.0, 0.0, 0.0, 1.0
+		};
+		degree = 30;
+		GzMatrix rotateZ =
+		{
+			cos(degree * PI / 180), -sin(degree * PI / 180), 0.0, 0.0,
+			sin(degree * PI / 180), cos(degree * PI / 180), 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0
 		};
 
-		GzMatrix	rotateY =
+		/*GzMatrix	rotateY =
 		{
 			.866,	0.0,	-0.5,	0.0,
 			0.0,	1.0,	0.0,	0.0,
 			0.5,	0.0,	.866,	0.0,
 			0.0,	0.0,	0.0,	1.0
-		};
+		};*/
 
 #if 1 	/* set up app-defined camera if desired, else use camera defaults */
 		camera.position[X] = -3;
@@ -134,9 +175,9 @@ int Application5::Initialize()
 		GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
 		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
 		GzLight	ambientlight = { {0, 0, 0}, {0.3, 0.3, 0.3} };*/
-		GzLight	light1 = { {-0.7071, 0.7071, 0}, {1.0, 1.0, 1.0} };
+		GzLight	light1 = {{-0.7071, 0.7071, 0}, {1.0, 1.0, 1.0}};
 		GzLight	light2 = { {0, -0.7071, -0.7071}, {1.0, 1.0, 1.0} };
-		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.0, 0.0, 0.0} };
+		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {1.0, 1.0, 1.0} };
 		GzLight	ambientlight = { {0, 0, 0}, {0.3, 0.3, 0.3} };
 
 		/* Material property */
@@ -197,7 +238,13 @@ int Application5::Initialize()
 		#else
 					valueListShader[6] = (GzPointer)(tex_norm_fun);	/* or use ptex_fun */
 		#endif
-		status |= m_pRender[i]->GzPutAttribute(7, nameListShader, valueListShader);
+	    nameListShader[7] = GZ_TEXTURE_DISPLACEMENT_MAP;
+		#if 0   /* set up null texture function or valid pointer */
+					valueListShader[7] = (GzPointer)0;
+		#else
+					valueListShader[7] = (GzPointer)(tex_displacement_fun);	/* or use ptex_fun */
+		#endif
+		status |= m_pRender[i]->GzPutAttribute(8, nameListShader, valueListShader);
 
 		// shift amounts
 		float shiftX = 0.0f;

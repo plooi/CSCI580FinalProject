@@ -25,6 +25,174 @@ void clampColor(GzColor);
 
 #define PI (float) 3.14159265358979323846
 
+
+// Function to print vector to a file
+void printVectorToFile(const char* fileName, const char* vectorName, const float* vector, int size) {
+	FILE* file = fopen(fileName, "a"); // Open the file in append mode
+
+	if (file != NULL) {
+		fprintf(file, "%s: ", vectorName);
+		for (int i = 0; i < size; ++i) {
+			fprintf(file, "%.6f ", vector[i]);
+		}
+		fprintf(file, "\n");
+
+		fclose(file);
+	}
+	else {
+		fprintf(stderr, "Error opening file: %s\n", fileName);
+	}
+}
+
+bool Inverse(float T[][4], float Target[][4])
+{
+	float inv[16], det, invOut[16];
+	int i, j, k;
+
+	inv[0] = T[1][1] * T[2][2] * T[3][3] -
+		T[1][1] * T[2][3] * T[3][2] -
+		T[2][1] * T[1][2] * T[3][3] +
+		T[2][1] * T[1][3] * T[3][2] +
+		T[3][1] * T[1][2] * T[2][3] -
+		T[3][1] * T[1][3] * T[2][2];
+
+	inv[4] = -T[1][0] * T[2][2] * T[3][3] +
+		T[1][0] * T[2][3] * T[3][2] +
+		T[2][0] * T[1][2] * T[3][3] -
+		T[2][0] * T[1][3] * T[3][2] -
+		T[3][0] * T[1][2] * T[2][3] +
+		T[3][0] * T[1][3] * T[2][2];
+
+	inv[8] = T[1][0] * T[2][1] * T[3][3] -
+		T[1][0] * T[2][3] * T[3][1] -
+		T[2][0] * T[1][1] * T[3][3] +
+		T[2][0] * T[1][3] * T[3][1] +
+		T[3][0] * T[1][1] * T[2][3] -
+		T[3][0] * T[1][3] * T[2][1];
+
+	inv[12] = -T[1][0] * T[2][1] * T[3][2] +
+		T[1][0] * T[2][2] * T[3][1] +
+		T[2][0] * T[1][1] * T[3][2] -
+		T[2][0] * T[1][2] * T[3][1] -
+		T[3][0] * T[1][1] * T[2][2] +
+		T[3][0] * T[1][2] * T[2][1];
+
+	inv[1] = -T[0][1] * T[2][2] * T[3][3] +
+		T[0][1] * T[2][3] * T[3][2] +
+		T[2][1] * T[0][2] * T[3][3] -
+		T[2][1] * T[0][3] * T[3][2] -
+		T[3][1] * T[0][2] * T[2][3] +
+		T[3][1] * T[0][3] * T[2][2];
+
+	inv[5] = T[0][0] * T[2][2] * T[3][3] -
+		T[0][0] * T[2][3] * T[3][2] -
+		T[2][0] * T[0][2] * T[3][3] +
+		T[2][0] * T[0][3] * T[3][2] +
+		T[3][0] * T[0][2] * T[2][3] -
+		T[3][0] * T[0][3] * T[2][2];
+
+	inv[9] = -T[0][0] * T[2][1] * T[3][3] +
+		T[0][0] * T[2][3] * T[3][1] +
+		T[2][0] * T[0][1] * T[3][3] -
+		T[2][0] * T[0][3] * T[3][1] -
+		T[3][0] * T[0][1] * T[2][3] +
+		T[3][0] * T[0][3] * T[2][1];
+
+	inv[13] = T[0][0] * T[2][1] * T[3][2] -
+		T[0][0] * T[2][2] * T[3][1] -
+		T[2][0] * T[0][1] * T[3][2] +
+		T[2][0] * T[0][2] * T[3][1] +
+		T[3][0] * T[0][1] * T[2][2] -
+		T[3][0] * T[0][2] * T[2][1];
+
+	inv[2] = T[0][1] * T[1][2] * T[3][3] -
+		T[0][1] * T[1][3] * T[3][2] -
+		T[1][1] * T[0][2] * T[3][3] +
+		T[1][1] * T[0][3] * T[3][2] +
+		T[3][1] * T[0][2] * T[1][3] -
+		T[3][1] * T[0][3] * T[1][2];
+
+	inv[6] = -T[0][0] * T[1][2] * T[3][3] +
+		T[0][0] * T[1][3] * T[3][2] +
+		T[1][0] * T[0][2] * T[3][3] -
+		T[1][0] * T[0][3] * T[3][2] -
+		T[3][0] * T[0][2] * T[1][3] +
+		T[3][0] * T[0][3] * T[1][2];
+
+	inv[10] = T[0][0] * T[1][1] * T[3][3] -
+		T[0][0] * T[1][3] * T[3][1] -
+		T[1][0] * T[0][1] * T[3][3] +
+		T[1][0] * T[0][3] * T[3][1] +
+		T[3][0] * T[0][1] * T[1][3] -
+		T[3][0] * T[0][3] * T[1][1];
+
+	inv[14] = -T[0][0] * T[1][1] * T[3][2] +
+		T[0][0] * T[1][2] * T[3][1] +
+		T[1][0] * T[0][1] * T[3][2] -
+		T[1][0] * T[0][2] * T[3][1] -
+		T[3][0] * T[0][1] * T[1][2] +
+		T[3][0] * T[0][2] * T[1][1];
+
+	inv[3] = -T[0][1] * T[1][2] * T[2][3] +
+		T[0][1] * T[1][3] * T[2][2] +
+		T[1][1] * T[0][2] * T[2][3] -
+		T[1][1] * T[0][3] * T[2][2] -
+		T[2][1] * T[0][2] * T[1][3] +
+		T[2][1] * T[0][3] * T[1][2];
+
+	inv[7] = T[0][0] * T[1][2] * T[2][3] -
+		T[0][0] * T[1][3] * T[2][2] -
+		T[1][0] * T[0][2] * T[2][3] +
+		T[1][0] * T[0][3] * T[2][2] +
+		T[2][0] * T[0][2] * T[1][3] -
+		T[2][0] * T[0][3] * T[1][2];
+
+	inv[11] = -T[0][0] * T[1][1] * T[2][3] +
+		T[0][0] * T[1][3] * T[2][1] +
+		T[1][0] * T[0][1] * T[2][3] -
+		T[1][0] * T[0][3] * T[2][1] -
+		T[2][0] * T[0][1] * T[1][3] +
+		T[2][0] * T[0][3] * T[1][1];
+
+	inv[15] = T[0][0] * T[1][1] * T[2][2] -
+		T[0][0] * T[1][2] * T[2][1] -
+		T[1][0] * T[0][1] * T[2][2] +
+		T[1][0] * T[0][2] * T[2][1] +
+		T[2][0] * T[0][1] * T[1][2] -
+		T[2][0] * T[0][2] * T[1][1];
+
+	det = T[0][0] * inv[0] + T[0][1] * inv[4] + T[0][2] * inv[8] + T[0][3] * inv[12];
+
+	if (det == 0)
+		return false;
+
+
+	det = 1.0 / det;
+
+	for (i = 0; i < 16; i++)
+		invOut[i] = inv[i] * det;
+
+	Target[0][0] = invOut[0];
+	Target[0][1] = invOut[1];
+	Target[0][2] = invOut[2];
+	Target[0][3] = invOut[3];
+	Target[1][0] = invOut[4];
+	Target[1][1] = invOut[5];
+	Target[1][2] = invOut[6];
+	Target[1][3] = invOut[7];
+	Target[2][0] = invOut[8];
+	Target[2][1] = invOut[9];
+	Target[2][2] = invOut[10];
+	Target[2][3] = invOut[11];
+	Target[3][0] = invOut[12];
+	Target[3][1] = invOut[13];
+	Target[3][2] = invOut[14];
+	Target[3][3] = invOut[15];
+
+	return true;
+
+}
+
 /*Multiply a 4D vector with a 4*4 matrix */
 void MatrixMulVector(float NewVec[4], float A[4][4], float Vec[3], float type) {
 	int i, j;
@@ -709,6 +877,14 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken* nameList, GzPointer* va
 
 			break;
 		}
+		case GZ_TEXTURE_DISPLACEMENT_MAP
+			:
+		{
+			// typecast to GzTexture
+			tex_displacement_fun = (GzTexture)valueList[i];
+
+			break;
+		}
 		case GZ_AASHIFTX:
 		{
 			// typecast to float* pointer then access the values inside
@@ -808,14 +984,17 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	Bitangent[Z] = f * (-deltaUV2[U] * E1[Z] + deltaUV1[U] * E2[Z]);
 
 
-	/*Define TBN matrix for each triangle mesh to transform from tangent space to model space*/
-	GzMatrix TBN;
+	// Define TBN matrix for each triangle mesh to transform from tangent space to model space
+	GzMatrix TBN, Inv_TBN;
 	
 	TBN[0][0] = Tangent[X]; TBN[1][0] = Tangent[Y]; TBN[2][0] = Tangent[Z];
 	TBN[0][1] = Bitangent[X]; TBN[1][1] = Bitangent[Y]; TBN[2][1] = Bitangent[Z];
 	TBN[0][2] = norm_mat[X][0]; TBN[1][2] = norm_mat[Y][0]; TBN[2][2] = norm_mat[Z][0];
 	TBN[0][3] = TBN[1][3] = TBN[2][3] = TBN[3][0] = TBN[3][1] = TBN[3][2] = 0;
 	TBN[3][3] = 1;
+
+	// Inv_TBN: transform from model space to tangent space
+	Inverse(TBN, Inv_TBN);
 
 	// Create 4x4 matrices to hold transformed vertex positions and normals
 	GzMatrix trans_vert_mat;
@@ -825,6 +1004,10 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	matrixMultiplication(Ximage[matlevel], vert_mat, trans_vert_mat);
 	// Transform normals from model space to image space
 	matrixMultiplication(Xnorm[matlevel], norm_mat, trans_norm_mat);
+
+	GzMatrix Image2Model;
+	// Image2Model: transform from image space to model space
+	Inverse(Xnorm[matlevel], Image2Model);
 
 	// Create 3D vertices and normals arrays for the triangle
 	GzCoord vert[3];
@@ -1204,8 +1387,71 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 							// Transform interpolated value back to affine space
 							float v_interp = v_pers_interp * (z_interp_prime + 1.0f);
 
-							// Texture look up
-							tex_fun(u_interp, v_interp, uv_color);
+							// E is the view direction vector in image space
+							GzCoord E = { 0.0f, 0.0f, -1.0f }, Model_E, Tangent_E;
+
+							// Transform E from image space to tangent space for uv coords offset calculation
+							// Image Space -> Model Space -> Tangent Space
+							MatrixMulVector(Model_E, Image2Model, E, 0);
+							normalizeVector(Model_E);
+							MatrixMulVector(Tangent_E, Inv_TBN, Model_E, 0);
+							normalizeVector(Tangent_E);
+
+							// import height map
+							GzColor height;
+							tex_displacement_fun(u_interp, v_interp, height);
+							// Play around with the value of scale to check out different bump mapping effects. 
+							// A higher scale makes the bumps stand out more, but go too big, and you might notice some distortion in the bump map
+							float scale = 2;
+							float p[2];
+
+							// Mode 0: Pure Normal Mapping
+							// Mode 1: Parallax Mapping
+							// Mode 2: Steep Parallax Mapping
+							int PARALLAX_MAPPING_TYPE = 2;
+
+							if (PARALLAX_MAPPING_TYPE == 1)
+							{
+								// Parallax Mapping
+								p[X] = (Tangent_E[X] / Tangent_E[Z]) * height[0] * scale;
+								p[Y] = (Tangent_E[Y] / Tangent_E[Z]) * height[0] * scale;
+								u_interp -= p[0];
+								v_interp -= p[1];
+							}
+							else if (PARALLAX_MAPPING_TYPE == 2)
+							{
+
+								// Steep Parallax Mapping
+								float deltaTexCoords[2];
+								// number of depth layers
+								float numLayers = 10;
+								// calculate the size of each layer
+								float layerDepth = 1.0 / numLayers;
+								// depth of current layer
+								float currentLayerDepth = 0.0;
+								// the amount to shift the texture coordinates per layer (from vector P)
+								p[0] = Tangent_E[X] * scale;
+								p[1] = Tangent_E[Y] * scale;
+								deltaTexCoords[U] = p[0] / numLayers;
+								deltaTexCoords[V] = p[1] / numLayers;
+
+								// get initial values
+								float currentDepthMapValue = height[0];
+								while (currentLayerDepth < currentDepthMapValue)
+								{
+									// shift texture coordinates along direction of P
+									u_interp -= deltaTexCoords[0];
+									v_interp -= deltaTexCoords[1];
+									tex_displacement_fun(u_interp, v_interp, height);
+									// get depthmap value at current texture coordinates
+									currentDepthMapValue = height[0];
+									// get depth of next layer
+									currentLayerDepth += layerDepth;
+								}
+							}
+
+							if (!(u_interp > 1.0 || v_interp > 1.0 || u_interp < 0.0 || v_interp < 0.0))
+								tex_fun(u_interp, v_interp, uv_color);
 
 							// Ka and Kd equal to texture color
 							Ka[RED] = uv_color[RED];
@@ -1215,7 +1461,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 							Kd[RED] = uv_color[RED];
 							Kd[GREEN] = uv_color[GREEN];
 							Kd[BLUE] = uv_color[BLUE];
-
 
 							/*Load new normals from texture normal map*/
 							GzColor norm_temp, norm_map;
