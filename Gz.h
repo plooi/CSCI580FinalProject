@@ -2,15 +2,15 @@
  * Gz.h - include file for the cs580 rendering library
  */
 
-/*
- * universal constants
- */
+ /*
+  * universal constants
+  */
 #define GZ_SUCCESS      0
 #define GZ_FAILURE      1
 
-/*
- * name list tokens
- */
+  /*
+   * name list tokens
+   */
 #define GZ_NULL_TOKEN			0	/* triangle vert attributes */
 #define GZ_POSITION				1
 #define GZ_NORMAL				2
@@ -20,7 +20,7 @@
 #define	GZ_AASHIFTX				44	/* antialiasing screen offset */
 #define	GZ_AASHIFTY				45	/* antialiasing screen offset */
 
-/* renderer-state default pixel color */
+   /* renderer-state default pixel color */
 #define GZ_RGB_COLOR            99	
 
 #define GZ_INTERPOLATE			95	/* define interpolation mode */
@@ -34,18 +34,22 @@
 #define GZ_DISTRIBUTION_COEFFICIENT	1004	/* specular power of material */
 
 #define	GZ_TEXTURE_MAP			1010	/* pointer to texture routine */
+#define	GZ_TEXTURE_NORMAL_MAP	1011
+#define	GZ_TEXTURE_DISPLACEMENT_MAP	1012
+
+#define GZ_BUMP_MAPPING_TYPE 2348784
 
 /*
  * flags fields for value list attributes
  */
 
-/* select interpolation mode of the shader (only one) */
+ /* select interpolation mode of the shader (only one) */
 #define GZ_FLAT			0	/* flat shading with GZ_RBG_COLOR */
 #define	GZ_COLOR		1	/* interpolate vertex color */
 #define	GZ_NORMALS		2	/* interpolate normals */
 
 typedef int     GzToken;
-typedef void    *GzPointer;
+typedef void* GzPointer;
 typedef float   GzColor[3];
 typedef short   GzIntensity;	/* 0 - 4095 in lower 12-bits */
 typedef float   GzCoord[3];
@@ -56,10 +60,6 @@ typedef int	GzDepth;		/* z is signed for clipping */
 typedef	int	(*GzTexture)(float u, float v, GzColor color);	/* pointer to texture sampling method */
 /* u,v parameters [0,1] are defined tex_fun(float u, float v, GzColor color) */
 
-
-
-
-
 /*
  * Gz camera definition
  */
@@ -67,12 +67,12 @@ typedef	int	(*GzTexture)(float u, float v, GzColor color);	/* pointer to texture
 #define GZCAMERA
 typedef struct  GzCamera
 {
-  GzMatrix			Xiw;  		/* xform from world to image space */
-  GzMatrix			Xpi;  		/* perspective projection xform */
-  GzCoord			position;  	/* position of image plane origin */
-  GzCoord			lookat;         /* position of look-at-point */
-  GzCoord			worldup;  /* world up-vector (almost screen up) */
-  float				FOV;            /* horizontal field of view */
+	GzMatrix			Xiw;  		/* xform from world to image space */
+	GzMatrix			Xpi;  		/* perspective projection xform */
+	GzCoord			position;  	/* position of image plane origin */
+	GzCoord			lookat;         /* position of look-at-point */
+	GzCoord			worldup;  /* world up-vector (almost screen up) */
+	float				FOV;            /* horizontal field of view */
 } GzCamera;
 #endif
 
@@ -80,8 +80,8 @@ typedef struct  GzCamera
 #define GZLIGHT
 typedef struct  GzLight
 {
-   GzCoord		direction; 	/* vector from surface to light */
-   GzColor		color;		/* light color intensity */
+	GzCoord		direction; 	/* vector from surface to light */
+	GzColor		color;		/* light color intensity */
 } GzLight;
 #endif
 
@@ -89,10 +89,10 @@ typedef struct  GzLight
 #define GZINPUT
 typedef struct  GzInput
 {
-   GzCoord          rotation;       /* object rotation */
-   GzCoord			translation;	/* object translation */
-   GzCoord			scale;			/* object scaling */
-   GzCamera			camera;			/* camera */
+	GzCoord          rotation;       /* object rotation */
+	GzCoord			translation;	/* object translation */
+	GzCoord			scale;			/* object scaling */
+	GzCamera			camera;			/* camera */
 } GzInput;
 #endif
 
@@ -110,20 +110,14 @@ typedef struct  GzInput
 
 #ifndef GZ_PIXEL
 typedef	struct {
-  GzIntensity    red;	
-  GzIntensity    green;
-  GzIntensity    blue;
-  GzIntensity    alpha;
-  GzDepth	 z;
+	GzIntensity    red;
+	GzIntensity    green;
+	GzIntensity    blue;
+	GzIntensity    alpha;
+	GzDepth	 z;
 } GzPixel;
 #define GZ_PIXEL
 #endif;
 
 #define	MAXXRES	1024	/* put some bounds on size in case of error */
 #define	MAXYRES	1024
-
-
-
-
-
-

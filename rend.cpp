@@ -10,7 +10,7 @@
 // iostream
 #include <iostream>
 #include <bitset>
-
+#pragma warning disable 1591 
 void sortVerticesCW(GzCoord*, GzCoord*);
 void calculatePlaneNormal(GzCoord*, float*);
 void initializeGzMatrix(GzMatrix);
@@ -25,6 +25,190 @@ void calculateLightingColor(GzCoord, GzColor, GzColor, GzColor, GzLight, GzLight
 void clampColor(GzColor);
 
 #define PI (float) 3.14159265358979323846
+
+
+// Function to print vector to a file
+void printVectorToFile(const char* fileName, const char* vectorName, const float* vector, int size) {
+	FILE* file = fopen(fileName, "a"); // Open the file in append mode
+
+	if (file != NULL) {
+		fprintf(file, "%s: ", vectorName);
+		for (int i = 0; i < size; ++i) {
+			fprintf(file, "%.6f ", vector[i]);
+		}
+		fprintf(file, "\n");
+
+		fclose(file);
+	}
+	else {
+		fprintf(stderr, "Error opening file: %s\n", fileName);
+	}
+}
+
+bool Inverse(float T[][4], float Target[][4])
+{
+	float inv[16], det, invOut[16];
+	int i, j, k;
+
+	inv[0] = T[1][1] * T[2][2] * T[3][3] -
+		T[1][1] * T[2][3] * T[3][2] -
+		T[2][1] * T[1][2] * T[3][3] +
+		T[2][1] * T[1][3] * T[3][2] +
+		T[3][1] * T[1][2] * T[2][3] -
+		T[3][1] * T[1][3] * T[2][2];
+
+	inv[4] = -T[1][0] * T[2][2] * T[3][3] +
+		T[1][0] * T[2][3] * T[3][2] +
+		T[2][0] * T[1][2] * T[3][3] -
+		T[2][0] * T[1][3] * T[3][2] -
+		T[3][0] * T[1][2] * T[2][3] +
+		T[3][0] * T[1][3] * T[2][2];
+
+	inv[8] = T[1][0] * T[2][1] * T[3][3] -
+		T[1][0] * T[2][3] * T[3][1] -
+		T[2][0] * T[1][1] * T[3][3] +
+		T[2][0] * T[1][3] * T[3][1] +
+		T[3][0] * T[1][1] * T[2][3] -
+		T[3][0] * T[1][3] * T[2][1];
+
+	inv[12] = -T[1][0] * T[2][1] * T[3][2] +
+		T[1][0] * T[2][2] * T[3][1] +
+		T[2][0] * T[1][1] * T[3][2] -
+		T[2][0] * T[1][2] * T[3][1] -
+		T[3][0] * T[1][1] * T[2][2] +
+		T[3][0] * T[1][2] * T[2][1];
+
+	inv[1] = -T[0][1] * T[2][2] * T[3][3] +
+		T[0][1] * T[2][3] * T[3][2] +
+		T[2][1] * T[0][2] * T[3][3] -
+		T[2][1] * T[0][3] * T[3][2] -
+		T[3][1] * T[0][2] * T[2][3] +
+		T[3][1] * T[0][3] * T[2][2];
+
+	inv[5] = T[0][0] * T[2][2] * T[3][3] -
+		T[0][0] * T[2][3] * T[3][2] -
+		T[2][0] * T[0][2] * T[3][3] +
+		T[2][0] * T[0][3] * T[3][2] +
+		T[3][0] * T[0][2] * T[2][3] -
+		T[3][0] * T[0][3] * T[2][2];
+
+	inv[9] = -T[0][0] * T[2][1] * T[3][3] +
+		T[0][0] * T[2][3] * T[3][1] +
+		T[2][0] * T[0][1] * T[3][3] -
+		T[2][0] * T[0][3] * T[3][1] -
+		T[3][0] * T[0][1] * T[2][3] +
+		T[3][0] * T[0][3] * T[2][1];
+
+	inv[13] = T[0][0] * T[2][1] * T[3][2] -
+		T[0][0] * T[2][2] * T[3][1] -
+		T[2][0] * T[0][1] * T[3][2] +
+		T[2][0] * T[0][2] * T[3][1] +
+		T[3][0] * T[0][1] * T[2][2] -
+		T[3][0] * T[0][2] * T[2][1];
+
+	inv[2] = T[0][1] * T[1][2] * T[3][3] -
+		T[0][1] * T[1][3] * T[3][2] -
+		T[1][1] * T[0][2] * T[3][3] +
+		T[1][1] * T[0][3] * T[3][2] +
+		T[3][1] * T[0][2] * T[1][3] -
+		T[3][1] * T[0][3] * T[1][2];
+
+	inv[6] = -T[0][0] * T[1][2] * T[3][3] +
+		T[0][0] * T[1][3] * T[3][2] +
+		T[1][0] * T[0][2] * T[3][3] -
+		T[1][0] * T[0][3] * T[3][2] -
+		T[3][0] * T[0][2] * T[1][3] +
+		T[3][0] * T[0][3] * T[1][2];
+
+	inv[10] = T[0][0] * T[1][1] * T[3][3] -
+		T[0][0] * T[1][3] * T[3][1] -
+		T[1][0] * T[0][1] * T[3][3] +
+		T[1][0] * T[0][3] * T[3][1] +
+		T[3][0] * T[0][1] * T[1][3] -
+		T[3][0] * T[0][3] * T[1][1];
+
+	inv[14] = -T[0][0] * T[1][1] * T[3][2] +
+		T[0][0] * T[1][2] * T[3][1] +
+		T[1][0] * T[0][1] * T[3][2] -
+		T[1][0] * T[0][2] * T[3][1] -
+		T[3][0] * T[0][1] * T[1][2] +
+		T[3][0] * T[0][2] * T[1][1];
+
+	inv[3] = -T[0][1] * T[1][2] * T[2][3] +
+		T[0][1] * T[1][3] * T[2][2] +
+		T[1][1] * T[0][2] * T[2][3] -
+		T[1][1] * T[0][3] * T[2][2] -
+		T[2][1] * T[0][2] * T[1][3] +
+		T[2][1] * T[0][3] * T[1][2];
+
+	inv[7] = T[0][0] * T[1][2] * T[2][3] -
+		T[0][0] * T[1][3] * T[2][2] -
+		T[1][0] * T[0][2] * T[2][3] +
+		T[1][0] * T[0][3] * T[2][2] +
+		T[2][0] * T[0][2] * T[1][3] -
+		T[2][0] * T[0][3] * T[1][2];
+
+	inv[11] = -T[0][0] * T[1][1] * T[2][3] +
+		T[0][0] * T[1][3] * T[2][1] +
+		T[1][0] * T[0][1] * T[2][3] -
+		T[1][0] * T[0][3] * T[2][1] -
+		T[2][0] * T[0][1] * T[1][3] +
+		T[2][0] * T[0][3] * T[1][1];
+
+	inv[15] = T[0][0] * T[1][1] * T[2][2] -
+		T[0][0] * T[1][2] * T[2][1] -
+		T[1][0] * T[0][1] * T[2][2] +
+		T[1][0] * T[0][2] * T[2][1] +
+		T[2][0] * T[0][1] * T[1][2] -
+		T[2][0] * T[0][2] * T[1][1];
+
+	det = T[0][0] * inv[0] + T[0][1] * inv[4] + T[0][2] * inv[8] + T[0][3] * inv[12];
+
+	if (det == 0)
+		return false;
+
+
+	det = 1.0 / det;
+
+	for (i = 0; i < 16; i++)
+		invOut[i] = inv[i] * det;
+
+	Target[0][0] = invOut[0];
+	Target[0][1] = invOut[1];
+	Target[0][2] = invOut[2];
+	Target[0][3] = invOut[3];
+	Target[1][0] = invOut[4];
+	Target[1][1] = invOut[5];
+	Target[1][2] = invOut[6];
+	Target[1][3] = invOut[7];
+	Target[2][0] = invOut[8];
+	Target[2][1] = invOut[9];
+	Target[2][2] = invOut[10];
+	Target[2][3] = invOut[11];
+	Target[3][0] = invOut[12];
+	Target[3][1] = invOut[13];
+	Target[3][2] = invOut[14];
+	Target[3][3] = invOut[15];
+
+	return true;
+
+}
+
+/*Multiply a 4D vector with a 4*4 matrix */
+void MatrixMulVector(float NewVec[4], float A[4][4], float Vec[3], float type) {
+	int i, j;
+	for (i = 0; i < 4; i++)
+	{
+		NewVec[i] = 0.0;
+		for (j = 0; j < 4; j++)
+		{
+			if (j == 3)
+				NewVec[i] += A[i][j] * type;
+			else
+				NewVec[i] += A[i][j] * Vec[j];
+		}
+	}
+}
 
 int GzRender::GzRotXMat(float degree, GzMatrix mat)
 {
@@ -226,8 +410,6 @@ GzRender::~GzRender()
 	// free pixel buffer memory
 	delete[] pixelbuffer;
 }
-
-
 int GzRender::GzDefault()
 {
 	return GzDefault(174 * 16, 230 * 16, 234 * 16);
@@ -237,6 +419,7 @@ int GzRender::GzDefault(int backgroundR, int backgroundG, int backgroundB)
 	/* HW1.3 set pixel buffer to some default values - start a new frame */
 
 		// RGB values are for a light blue color (8-bit version: 174,230,234)
+	
 	GzIntensity r = backgroundR;
 	GzIntensity g = backgroundG;
 	GzIntensity b = backgroundB;
@@ -691,6 +874,22 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken* nameList, GzPointer* va
 
 			break;
 		}
+		case GZ_TEXTURE_NORMAL_MAP
+			:
+		{
+			// typecast to GzTexture
+			tex_norm_fun = (GzTexture)valueList[i];
+
+			break;
+		}
+		case GZ_TEXTURE_DISPLACEMENT_MAP
+			:
+		{
+			// typecast to GzTexture
+			tex_displacement_fun = (GzTexture)valueList[i];
+
+			break;
+		}
 		case GZ_AASHIFTX:
 		{
 			// typecast to float* pointer then access the values inside
@@ -725,6 +924,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	*/
 
 	// Create a 4x4 matrix to apply transformations to the triangles
+	////Println("A");
 	GzMatrix vert_mat = { 0.0f };
 	GzMatrix norm_mat = { 0.0f };
 	GzTextureIndex uv_mat[3];
@@ -762,6 +962,48 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 		}
 
 	}
+	////Println("B");
+	//Println("AAA");
+	/*Calculate Tangent vector, Bitangent vector for each triangle mesh, reference: https://learnopengl.com/Advanced-Lighting/Normal-Mapping */
+	GzCoord E1, E2, Tangent, Bitangent;
+	float deltaUV1[2], deltaUV2[2];
+
+	E1[X] = vert_mat[X][1] - vert_mat[X][0];
+	E1[Y] = vert_mat[Y][1] - vert_mat[Y][0];
+	E1[Z] = vert_mat[Z][1] - vert_mat[Z][0];
+	E2[X] = vert_mat[X][2] - vert_mat[X][0];
+	E2[Y] = vert_mat[Y][2] - vert_mat[Y][0];
+	E2[Z] = vert_mat[Z][2] - vert_mat[Z][0];
+
+	deltaUV1[U] = uv_mat[1][U] - uv_mat[0][U];
+	deltaUV1[V] = uv_mat[1][V] - uv_mat[0][V];
+	deltaUV2[U] = uv_mat[2][U] - uv_mat[0][U];
+	deltaUV2[V] = uv_mat[2][V] - uv_mat[0][V];
+	float f = 1.0f / (deltaUV1[U] * deltaUV2[V] - deltaUV2[U] * deltaUV1[V]);
+
+	Tangent[X] = f * (deltaUV2[V] * E1[X] - deltaUV1[V] * E2[X]);
+	Tangent[Y] = f * (deltaUV2[V] * E1[Y] - deltaUV1[V] * E2[Y]);
+	Tangent[Z] = f * (deltaUV2[V] * E1[Z] - deltaUV1[V] * E2[Z]);
+
+	Bitangent[X] = f * (-deltaUV2[U] * E1[X] + deltaUV1[U] * E2[X]);
+	Bitangent[Y] = f * (-deltaUV2[U] * E1[Y] + deltaUV1[U] * E2[Y]);
+	Bitangent[Z] = f * (-deltaUV2[U] * E1[Z] + deltaUV1[U] * E2[Z]);
+
+	//Println("BBB");
+	// Define TBN matrix for each triangle mesh to transform from tangent space to model space
+	GzMatrix TBN, Inv_TBN;
+
+	TBN[0][0] = Tangent[X]; TBN[1][0] = Tangent[Y]; TBN[2][0] = Tangent[Z];
+	TBN[0][1] = Bitangent[X]; TBN[1][1] = Bitangent[Y]; TBN[2][1] = Bitangent[Z];
+	TBN[0][2] = norm_mat[X][0]; TBN[1][2] = norm_mat[Y][0]; TBN[2][2] = norm_mat[Z][0];
+	TBN[0][3] = TBN[1][3] = TBN[2][3] = TBN[3][0] = TBN[3][1] = TBN[3][2] = 0;
+	TBN[3][3] = 1;
+
+	////Println("C");
+
+	//Println("CCC");
+	// Inv_TBN: transform from model space to tangent space
+	Inverse(TBN, Inv_TBN);
 
 	// Create 4x4 matrices to hold transformed vertex positions and normals
 	GzMatrix trans_vert_mat;
@@ -771,6 +1013,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	matrixMultiplication(Ximage[matlevel], vert_mat, trans_vert_mat);
 	// Transform normals from model space to image space
 	matrixMultiplication(Xnorm[matlevel], norm_mat, trans_norm_mat);
+
+	GzMatrix Image2Model;
+	// Image2Model: transform from image space to model space
+	Inverse(Xnorm[matlevel], Image2Model);
+
+	////Println("D");
 
 	// Create 3D vertices and normals arrays for the triangle
 	GzCoord vert[3];
@@ -791,14 +1039,8 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 		vert[k][X] += Xoffset;
 		vert[k][Y] += Yoffset;
 	}
-
-	/*
-	Print("Vertices are ");
-	PrintCoord(vert[0]);
-	PrintCoord(vert[1]);
-	PrintCoord(vert[2]);
-	Println("");*/
-
+	//Println("DDD");
+	////Println("E");
 	// Evaluate lighting equation to calculate color at each vertex
 	GzColor vert_intensity[3] = { 0.0f };
 	calculateLightingColorsThreeVertices(norms, Ka, Kd, Ks, ambientlight, lights, numlights, spec, vert_intensity);
@@ -830,13 +1072,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	edge3_param[0] = sort_vert[0][Y] - sort_vert[2][Y]; // A = dY
 	edge3_param[1] = sort_vert[2][X] - sort_vert[0][X]; // B = -dX
 	edge3_param[2] = -edge3_param[1] * sort_vert[2][Y] - edge3_param[0] * sort_vert[2][X]; // C = dX*Y-dY*X
-
+	//Println("EEE");
 	// Find the pixels corresponding to the bounding box including the triangle
 	int box_minX = (int)floor(min(min(vert[0][X], vert[1][X]), vert[2][X]));
 	int box_minY = (int)floor(min(min(vert[0][Y], vert[1][Y]), vert[2][Y]));
 	int box_maxX = (int)ceil(max(max(vert[0][X], vert[1][X]), vert[2][X]));
 	int box_maxY = (int)ceil(max(max(vert[0][Y], vert[1][Y]), vert[2][Y]));
-
+	////Println("F");
 	// For each pixel in the bounding box
 	for (int pixel_x = max(box_minX, 0); (pixel_x <= box_maxX && pixel_x < xres); pixel_x++)
 	{
@@ -848,12 +1090,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 			float edge3_eval = edge3_param[0] * (float)pixel_x + edge3_param[1] * (float)pixel_y + edge3_param[2];
 
 
+
 			//Peter's addition to help with the edge sharing problem
 			//if the pixel lies on an edge, "move" it a bit to the right and then evaluate the edge equation again at that new location
 			//note this doesn't work with horizontal lines
-			if (edge1_eval == 0) edge1_eval = edge1_param[0] * (float)(pixel_x+.1f) + edge1_param[1] * (float)pixel_y + edge1_param[2];
-			if (edge2_eval == 0) edge2_eval = edge2_param[0] * (float)(pixel_x+.1f) + edge2_param[1] * (float)pixel_y + edge2_param[2];
-			if (edge3_eval == 0) edge3_eval = edge3_param[0] * (float)(pixel_x+.1f) + edge3_param[1] * (float)pixel_y + edge3_param[2];
+			if (edge1_eval == 0) edge1_eval = edge1_param[0] * (float)(pixel_x + .1f) + edge1_param[1] * (float)pixel_y + edge1_param[2];
+			if (edge2_eval == 0) edge2_eval = edge2_param[0] * (float)(pixel_x + .1f) + edge2_param[1] * (float)pixel_y + edge2_param[2];
+			if (edge3_eval == 0) edge3_eval = edge3_param[0] * (float)(pixel_x + .1f) + edge3_param[1] * (float)pixel_y + edge3_param[2];
 
 
 			// Determine whether signes of all evaluations are consistent
@@ -871,11 +1114,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 			// if the pixel inside the triangle
 			//if (signs_consistent || on_edge3 || on_edge2)
-
-
-			
-			//if (signs_consistent || edge1_eval == 0 || edge2_eval == 0 || edge3_eval == 0)
-			if(signs_consistent)
+			if (signs_consistent)
 			{
 				float plane_normal[3];
 
@@ -1044,12 +1283,8 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 							// Texture look up
 							tex_fun(u_interp, v_interp, uv_color);
-
-							//dont draw this pixel if this point on the texture is transparent
 							if (uv_color[0] == -1 && uv_color[1] == -1 && uv_color[2] == -1)
 								continue;
-
-
 							// Multiply calculated color with uv colors
 							red_color_interp *= uv_color[RED];
 							green_color_interp *= uv_color[GREEN];
@@ -1065,7 +1300,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 					// Phong shading
 					case GZ_NORMALS:
 					{
-						//Println("interpolating normals");
 						GzCoord vert_phong[3] = { 0.0f };
 						float plane_normal_phong[3];
 						float plane_D_phong;
@@ -1128,11 +1362,14 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 						float norm_Z_interp = -(plane_D_phong + plane_normal_phong[0] * (float)pixel_x + plane_normal_phong[1] * (float)pixel_y) / plane_normal_phong[2];
 
 						// Texture UV Mapping
+						GzCoord norm_map_ModelSpace, norm_map_ImageSpace;
+						GzCoord perturbed_norm_map_image;
 
+
+						////Println("W");
 						// if texture function is not a NULL pointer
 						if (tex_fun != NULL)
 						{
-							
 							GzColor uv_color;
 							float z_interp_prime = (float)z_interp / ((float)MAXINT - (float)z_interp);
 
@@ -1178,22 +1415,162 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 							// Transform interpolated value back to affine space
 							float v_interp = v_pers_interp * (z_interp_prime + 1.0f);
 
-							// Texture look up
-							tex_fun(u_interp, v_interp, uv_color);
-							/*
-							Print("UV coordinates");
-							PrintFloat(u_interp);
-							Print(" ");
-							PrintFloat(v_interp);
-							Println("");
 
-							Print("Texture function returned ");
-							PrintCoord(uv_color);
-							Println("");*/
 
-							//dont draw this pixel if this point on the texture is transparent
+							if (bumpMappingType >= 0)
+							{
+								// E is the view direction vector in image space
+								GzCoord E = { 0.0f, 0.0f, -1.0f }, Model_E, Tangent_E;
+								//Println("VVV");
+								// Transform E from image space to tangent space for uv coords offset calculation
+								// Image Space -> Model Space -> Tangent Space
+								MatrixMulVector(Model_E, Image2Model, E, 0);
+								normalizeVector(Model_E);
+								MatrixMulVector(Tangent_E, Inv_TBN, Model_E, 0);
+								normalizeVector(Tangent_E);
+								//Println("VEE");
+								// import height map
+								GzColor height;
+								tex_displacement_fun(u_interp, v_interp, height);
+								// Play around with the value of scale to check out different bump mapping effects. 
+								// A higher scale makes the bumps stand out more, but go too big, and you might notice some distortion in the bump map
+								float scale = 2;
+								float p[2];
+
+								// Mode 0: Pure Normal Mapping
+								// Mode 1: Parallax Mapping
+								// Mode 2: Steep Parallax Mapping
+								// Mode 3: Bump Mapping
+								//int bumpMappingType = 2;
+								//Println("WWW");
+								if (bumpMappingType == 1)
+								{
+									// Parallax Mapping
+									p[X] = (Tangent_E[X] / Tangent_E[Z]) * height[0] * scale;
+									p[Y] = (Tangent_E[Y] / Tangent_E[Z]) * height[0] * scale;
+									u_interp -= p[0];
+									v_interp -= p[1];
+								}
+								else if (bumpMappingType == 2)
+								{
+
+									// Steep Parallax Mapping
+									float deltaTexCoords[2];
+									// number of depth layers
+									float numLayers = 10;
+									// calculate the size of each layer
+									float layerDepth = 1.0 / numLayers;
+									// depth of current layer
+									float currentLayerDepth = 0.0;
+									// the amount to shift the texture coordinates per layer (from vector P)
+									p[0] = Tangent_E[X] * scale;
+									p[1] = Tangent_E[Y] * scale;
+									deltaTexCoords[U] = p[0] / numLayers;
+									deltaTexCoords[V] = p[1] / numLayers;
+
+									// get initial values
+									float currentDepthMapValue = height[0];
+									while (currentLayerDepth < currentDepthMapValue)
+									{
+										// shift texture coordinates along direction of P
+										u_interp -= deltaTexCoords[0];
+										v_interp -= deltaTexCoords[1];
+										tex_displacement_fun(u_interp, v_interp, height);
+										// get depthmap value at current texture coordinates
+										currentDepthMapValue = height[0];
+										// get depth of next layer
+										currentLayerDepth += layerDepth;
+									}
+								}
+								else if (bumpMappingType == 3)
+								{
+									// -- Bump mapping perturbation calculation -- 
+									// Reference paper: SIMULATION OF WRINKLED SURFACES, James F. Blinn
+									// https://dl.acm.org/doi/pdf/10.1145/965139.507101
+
+									// original interpolated normal vector in image space
+									GzCoord norm_interp_image = { norm_X_interp, norm_Y_interp, norm_Z_interp };
+
+									// Transform normal from image space to tangent space for perturbation map calculation
+									// Image Space -> Model Space -> Tangent Space
+									GzCoord norm_interp_model, norm_interp_tangent;
+									MatrixMulVector(norm_interp_model, Image2Model, norm_interp_image, 0);
+									normalizeVector(norm_interp_model);
+									MatrixMulVector(norm_interp_tangent, Inv_TBN, norm_interp_model, 0);
+									normalizeVector(norm_interp_tangent);
+
+									GzColor bump_upluse_v; // tex_bump_fun(u+e,v)
+									GzColor bump_uminuse_v; // tex_bump_fun(u-e,v)
+									GzColor bump_u_vpluse; // tex_bump_fun(u,v+e)
+									GzColor bump_u_vminuse; // tex_bump_fun(u,v-e)
+									GzCoord perturb_map; // perturbation map
+
+									float e = 0.0156f; // ~1/64 
+
+									// Read neigboring textures +e, -e amount
+									tex_displacement_fun(u_interp + e, v_interp, bump_upluse_v);
+									tex_displacement_fun(u_interp - e, v_interp, bump_uminuse_v);
+									tex_displacement_fun(u_interp, v_interp + e, bump_u_vpluse);
+									tex_displacement_fun(u_interp, v_interp - e, bump_u_vminuse);
+
+									// Bring the range to -1 to 1
+									bump_upluse_v[0] = 2.0 * bump_upluse_v[0] - 1.0;
+									bump_upluse_v[1] = 2.0 * bump_upluse_v[1] - 1.0;
+									bump_upluse_v[2] = 2.0 * bump_upluse_v[2] - 1.0;
+
+									bump_uminuse_v[0] = 2.0 * bump_uminuse_v[0] - 1.0;
+									bump_uminuse_v[1] = 2.0 * bump_uminuse_v[1] - 1.0;
+									bump_uminuse_v[2] = 2.0 * bump_uminuse_v[2] - 1.0;
+
+									bump_u_vpluse[0] = 2.0 * bump_u_vpluse[0] - 1.0;
+									bump_u_vpluse[1] = 2.0 * bump_u_vpluse[1] - 1.0;
+									bump_u_vpluse[2] = 2.0 * bump_u_vpluse[2] - 1.0;
+
+									bump_u_vminuse[0] = 2.0 * bump_u_vminuse[0] - 1.0;
+									bump_u_vminuse[1] = 2.0 * bump_u_vminuse[1] - 1.0;
+									bump_u_vminuse[2] = 2.0 * bump_u_vminuse[2] - 1.0;
+
+									GzColor Fu;
+									GzColor Fv;
+									Fu[0] = (bump_upluse_v[0] - bump_uminuse_v[0]) / (2 * e);
+									Fu[1] = (bump_upluse_v[1] - bump_uminuse_v[1]) / (2 * e);
+									Fu[2] = (bump_upluse_v[2] - bump_uminuse_v[2]) / (2 * e);
+									Fv[0] = (bump_u_vpluse[0] - bump_u_vminuse[0]) / (2 * e);
+									Fv[1] = (bump_u_vpluse[1] - bump_u_vminuse[1]) / (2 * e);
+									Fv[2] = (bump_u_vpluse[2] - bump_u_vminuse[2]) / (2 * e);
+
+									GzCoord NcrossPv;
+									GzCoord NcrossPu;
+									crossProduct(norm_interp_tangent, Bitangent, NcrossPv);
+									crossProduct(norm_interp_tangent, Tangent, NcrossPu);
+
+									perturb_map[0] = Fu[0] * NcrossPv[0] - Fv[0] * NcrossPu[0];
+									perturb_map[1] = Fu[1] * NcrossPv[1] - Fv[1] * NcrossPu[1];
+									perturb_map[2] = Fu[2] * NcrossPv[2] - Fv[2] * NcrossPu[2];
+
+									GzCoord perturbed_norm_map_tangent;
+									perturbed_norm_map_tangent[0] = norm_interp_tangent[0] + perturb_map[0];
+									perturbed_norm_map_tangent[1] = norm_interp_tangent[1] + perturb_map[1];
+									perturbed_norm_map_tangent[2] = norm_interp_tangent[2] + perturb_map[2];
+									normalizeVector(perturbed_norm_map_tangent);
+
+									GzCoord perturbed_norm_map_model;
+									//Transform new normals from tangent space to model space
+									MatrixMulVector(perturbed_norm_map_model, TBN, perturbed_norm_map_tangent, 0);
+									normalizeVector(perturbed_norm_map_model);
+									//Transform new normals from model space to image space
+									MatrixMulVector(perturbed_norm_map_image, Xnorm[matlevel], perturbed_norm_map_model, 0);
+									normalizeVector(perturbed_norm_map_image);
+								}
+							}
+							//Println("XXX");
+							if (!(u_interp > 1.0 || v_interp > 1.0 || u_interp < 0.0 || v_interp < 0.0))
+								tex_fun(u_interp, v_interp, uv_color);
+
+							//Println("YYY");
 							if (uv_color[0] == -1 && uv_color[1] == -1 && uv_color[2] == -1)
 								continue;
+
 
 							// Ka and Kd equal to texture color
 							Ka[RED] = uv_color[RED];
@@ -1203,21 +1580,56 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 							Kd[RED] = uv_color[RED];
 							Kd[GREEN] = uv_color[GREEN];
 							Kd[BLUE] = uv_color[BLUE];
+
+
+
+							if (bumpMappingType >= 0 && bumpMappingType < 3)
+							{
+								/*Load new normals from texture normal map*/
+								GzColor norm_temp, norm_map;
+								tex_norm_fun(u_interp, v_interp, norm_temp);
+
+
+								////Println("X");
+
+								norm_map[0] = 2.0 * norm_temp[0] - 1.0;
+								norm_map[1] = 2.0 * norm_temp[1] - 1.0;
+								norm_map[2] = 2.0 * norm_temp[2] - 1.0;
+								normalizeVector(norm_map);
+
+								////Println("Y");
+								/*Transform new normals from tangent space to model space*/
+								MatrixMulVector(norm_map_ModelSpace, TBN, norm_map, 0);
+								////Println("Z");
+								normalizeVector(norm_map_ModelSpace);
+								////Println("ZZ");
+								/*Transform new normals from model space to image space*/
+								MatrixMulVector(norm_map_ImageSpace, Xnorm[matlevel], norm_map_ModelSpace, 0);
+								////Println("ZZZ");
+								normalizeVector(norm_map_ImageSpace);
+							}
+							else if (bumpMappingType == 3)
+							{
+								norm_map_ImageSpace[0] = perturbed_norm_map_image[0];
+								norm_map_ImageSpace[1] = perturbed_norm_map_image[1];
+								norm_map_ImageSpace[2] = perturbed_norm_map_image[2];
+							}
 						}
 
 						// calculate color based on interpolated normals
 						GzColor norm_intensity = { 0.0f };
-						GzCoord norm_interp = { norm_X_interp, norm_Y_interp, norm_Z_interp };
+
+						GzCoord norm_interp;
+
+						if(bumpMappingType == -1)
+							//norm_interp = { norm_X_interp, norm_Y_interp, norm_Z_interp };
+							SetVector3(norm_interp, norm_X_interp, norm_Y_interp, norm_Z_interp);
+						else
+							//norm_interp = { norm_map_ImageSpace[0], norm_map_ImageSpace[1], norm_map_ImageSpace[2] };
+							SetVector3(norm_interp, norm_map_ImageSpace[0], norm_map_ImageSpace[1], norm_map_ImageSpace[2]);
+
 						normalizeVector(norm_interp);
 						calculateLightingColor(norm_interp, Ka, Kd, Ks, ambientlight, lights, numlights, spec, norm_intensity);
-
-
-						/*
-						Print("Drawing color ");
-						PrintCoord(norm_intensity);
-						Println("");
-						*/
-
 
 						r = ctoi(norm_intensity[0]);
 						g = ctoi(norm_intensity[1]);
@@ -1226,11 +1638,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 						break;
 					}
 					}
-
-
-
-
-
 					// Pass the values to the buffer
 					GzPut(pixel_x, pixel_y, r, g, b, a, (int)z_interp);
 				}
@@ -1681,4 +2088,10 @@ void clampColor(GzColor col)
 		else if (col[i] < 0.0f)
 			col[i] = 0.0f;
 	}
+}
+
+
+void GzRender::SetBumpMappingType(int b)
+{
+	bumpMappingType = b;
 }

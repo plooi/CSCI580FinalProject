@@ -17,13 +17,13 @@
 #define	MATLEVELS	100		/* how many matrix pushes allowed */
 #define	MAX_LIGHTS	10		/* how many lights allowed */
 
-class GzRender{			/* define a renderer */
-  
+class GzRender {			/* define a renderer */
+
 
 public:
 	unsigned short	xres;
 	unsigned short	yres;
-	GzPixel		*pixelbuffer;		/* frame buffer array */
+	GzPixel* pixelbuffer;		/* frame buffer array */
 	char* framebuffer;
 
 	GzCamera		m_camera;
@@ -39,13 +39,19 @@ public:
 	GzColor		Ka, Kd, Ks;
 	float		    spec;		/* specular power */
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
+	GzTexture		tex_norm_fun;
+	GzTexture       tex_displacement_fun;
+
+
+	int bumpMappingType = 0;
+	void SetBumpMappingType(int i);
 
 	// HW 6
 	float Xoffset;
 	float Yoffset;
 	float weight;
 
-  	// Constructors
+	// Constructors
 	GzRender(int xRes, int yRes);
 	~GzRender();
 
@@ -53,18 +59,17 @@ public:
 
 	// HW1: Display methods
 	int GzDefault();
-
 	int GzDefault(int backgroundR, int backgroundG, int backgroundB);
 	int GzBeginRender();
 	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
-	int GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth	*z);
+	int GzGet(int i, int j, GzIntensity* r, GzIntensity* g, GzIntensity* b, GzIntensity* a, GzDepth* z);
 
 	int GzFlushDisplay2File(FILE* outfile);
 	int GzFlushDisplay2FrameBuffer();
 
 	// HW2: Render methods
-	int GzPutAttribute(int numAttributes, GzToken *nameList, GzPointer *valueList);
-	int GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList);
+	int GzPutAttribute(int numAttributes, GzToken* nameList, GzPointer* valueList);
+	int GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueList);
 
 	// HW3
 	int GzPutCamera(GzCamera camera);
@@ -72,8 +77,8 @@ public:
 	int GzPopMatrix();
 
 	// Extra methods: NOT part of API - just for general assistance */
-	inline int ARRAY(int x, int y){return (x+y*xres);}	/* simplify fbuf indexing */
-	inline short	ctoi(float color) {return(short)((int)(color * ((1 << 12) - 1)));}		/* convert float color to GzIntensity short */
+	inline int ARRAY(int x, int y) { return (x + y * xres); }	/* simplify fbuf indexing */
+	inline short	ctoi(float color) { return(short)((int)(color * ((1 << 12) - 1))); }		/* convert float color to GzIntensity short */
 
 
 	// Object Translation

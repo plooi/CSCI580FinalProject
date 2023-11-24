@@ -11,24 +11,31 @@
 #include "Application5.h"
 #include "Gz.h"
 #include "rend.h"
-#include "Billboard.h"
 #include "Utils.h"
+#include "Billboard.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
-static char THIS_FILE[]=__FILE__;
+static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define INFILE  "ppot.asc"
+#define INFILE  "rect.asc"
 #define OUTFILE "output.ppm"
-
+#define PI 3.14159
 
 extern int tex_fun(float u, float v, GzColor color); /* image texture function */
+extern int tex_norm_fun(float u, float v, GzColor color);
+extern int tex_displacement_fun(float u, float v, GzColor height);
 extern int ptex_fun(float u, float v, GzColor color); /* procedural texture function */
 extern int GzFreeTexture();
 
 void shade(GzCoord norm, GzCoord color);
+
+
+
+#define NUM_BILLBOARDS 3
+Billboard billboards[NUM_BILLBOARDS];
 
 float AAFilter[AAKERNEL_SIZE][3] 		/* X-shift, Y-shift, weight */
 {
@@ -40,32 +47,31 @@ float AAFilter[AAKERNEL_SIZE][3] 		/* X-shift, Y-shift, weight */
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
+Application5::Application5()
+{
 
-#define NUM_BILLBOARDS 3
-Billboard billboards[NUM_BILLBOARDS];
+}
 
+Application5::~Application5()
+{
+	Clean();
+}
 
-/*
-Function that demonstrates using billboards
-*/
-void Main()
+int Application5::Initialize()
 {
 	
-	Billboard b;//create a billboard that will show the teapot in its original orientation
+	PrintingInit();
+	Billboard bill;//create a billboard that will show the teapot in its original orientation
 	Billboard myOtherBB;//create a billboard that will show the teapot rotated horizontally
 	Billboard topView;//create a billboard that will show the teapot rotated vertically
-
-	/*int numTriangles = 2;
-	float vertices[] = {-1, -1, 0, -1, 1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, .5, -.5, 0};
-	float uvs[] = { 0,1, 0,0, 1,0, 0,1, 1,0, 1,1 };
-	float normals[] = { 0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1 };*/
+	//Println("A");
 
 
 
 	//load the teapot model and store all that information in an object
 	Model model;
 	model.Load("justthepot.asc");
-	
+	//Println("B");
 
 	//put the model parameters into buffers
 	int numTriangles = model.numTriangles;
@@ -79,7 +85,7 @@ void Main()
 	GzTextureStruct texture;
 	texture.InitFromPPMFile("texture");
 
-
+	//Println("C");
 	//what do we want the resolution of the billboard image to be?
 	int billboardWidthPixels = 165;
 	int billboardHeightPixels = 165;
@@ -99,11 +105,9 @@ void Main()
 	SetVector3(specularCoefficient, 1, 1, 1);
 	GzColor diffuseCoefficient;
 	SetVector3(diffuseCoefficient, 1, 1, 1);
-	float specpower = 32;
-
 
 	//run the code to create billboard from model
-	b.CreateFromModel(
+	bill.CreateFromModel(
 		numTriangles,
 		vertices,
 		uvs,
@@ -117,24 +121,24 @@ void Main()
 		ambientCoefficient,
 		specularCoefficient,
 		diffuseCoefficient,
-		specpower,
+		32,
 		0,//model vertical rotation before being rendered onto the billboard (in radians)
 		0//model horizontal rotation before being rendered onto the billboard (in radians)
 	);
+	//Println("D");
 
-	
-	b.SetDimensions(2, 2);//the billboard will be scaled up to be 2x2 units in world space when rendered
-	b.SetRotation(0, 0);//the billboard itself will not be rotated 
+	bill.SetDimensions(20, 20);//the billboard will be scaled up to be this amount units in world space when rendered
+	bill.SetRotation(0, -3.14 / 4);//the billboard itself will be rotated by this amount
 
 	//the billboard will be rendered near the origin of the scene
 	GzCoord loc;
-	SetVector3(loc, 0, 0, 0);
-	b.SetLocation(loc);
+	SetVector3(loc, 6, -1, 6);
+	bill.SetLocation(loc);
 
 
-
-
-	/*Repeat the process for two more billboards*/
+	//Println("E");
+	
+	//Repeat the process for two more billboards
 
 	myOtherBB.CreateFromModel(
 		numTriangles,
@@ -150,15 +154,15 @@ void Main()
 		ambientCoefficient,
 		specularCoefficient,
 		diffuseCoefficient,
-		specpower,
+		32,
 		0,
-		3.14/2
+		3.14 / 2
 	);
-	myOtherBB.SetDimensions(2.5, 2.5);
+	myOtherBB.SetDimensions(15, 15);
 	myOtherBB.SetRotation(0, 0);
 	SetVector3(loc, -1, 0, 0);
 	myOtherBB.SetLocation(loc);
-
+	//Println("F");
 
 	topView.CreateFromModel(
 		numTriangles,
@@ -174,22 +178,27 @@ void Main()
 		ambientCoefficient,
 		specularCoefficient,
 		diffuseCoefficient,
-		specpower,
+		32,
 		-3.14 / 2,
 		0
 	);
-	topView.SetDimensions(2.5, 2.5);
+	topView.SetDimensions(15, 15);
 	topView.SetRotation(0, 0);
 	SetVector3(loc, 0, -1, 0);
 	topView.SetLocation(loc);
 	///////////////////////////////
-
-
+	//Println("G");
+	
 	//add billboards to an array of billboards, and all billboards in this array will be rendered
-	billboards[0] = b;
+	billboards[0] = bill;
 	billboards[1] = myOtherBB;
 	billboards[2] = topView;
-}
+
+
+	//Println("H");
+
+
+	
 
 
 
@@ -199,23 +208,6 @@ void Main()
 
 
 
-
-
-
-
-Application5::Application5()
-{
-	PrintingInit();
-	Main();
-}
-
-Application5::~Application5()
-{
-	Clean();
-}
-
-int Application5::Initialize()
-{
 	GzCamera	camera;
 	int		    xRes, yRes;	/* display parameters */
 
@@ -249,44 +241,24 @@ int Application5::Initialize()
 		m_pRender[i]->GzDefault();
 
 		/* Translation matrix */
-		GzMatrix	scale =
-		{
-			3.25,	0.0,	0.0,	0.0,
-			0.0,	3.25,	0.0,	-3.25,
-			0.0,	0.0,	3.25,	3.5,
-			0.0,	0.0,	0.0,	1.0
-		};
+		
+		
 
-		GzMatrix	rotateX =
-		{
-			1.0,	0.0,	0.0,	0.0,
-			0.0,	.7071,	.7071,	0.0,
-			0.0,	-.7071,	.7071,	0.0,
-			0.0,	0.0,	0.0,	1.0
-		};
-
-		GzMatrix	rotateY =
-		{
-			.866,	0.0,	-0.5,	0.0,
-			0.0,	1.0,	0.0,	0.0,
-			0.5,	0.0,	.866,	0.0,
-			0.0,	0.0,	0.0,	1.0
-		};
 
 #if 1 	/* set up app-defined camera if desired, else use camera defaults */
-		camera.position[X] = 0;
-		camera.position[Y] = 0;
-		camera.position[Z] = -1;
+		camera.position[X] = -3;
+		camera.position[Y] = -25;
+		camera.position[Z] = -4;
 
-		camera.lookat[X] = 0;
-		camera.lookat[Y] = 0;
-		camera.lookat[Z] = 0;
+		camera.lookat[X] = 7.8;
+		camera.lookat[Y] = 0.7;
+		camera.lookat[Z] = 6.5;
 
-		camera.worldup[X] = 0;
+		camera.worldup[X] = -0.2;
 		camera.worldup[Y] = 1.0;
 		camera.worldup[Z] = 0.0;
 
-		camera.FOV = 45;              /* degrees *              /* degrees */
+		camera.FOV = 63.7;              /* degrees *              /* degrees */
 
 		status |= m_pRender[i]->GzPutCamera(camera);
 #endif 
@@ -295,14 +267,14 @@ int Application5::Initialize()
 		status |= m_pRender[i]->GzBeginRender();
 
 		/* Light */
-
-		/*
-		GzLight	light1 = { {-0.7071, 0.7071, 0}, {0.5, 0.5, 0.9} };
+		/*GzLight	light1 = {{-0.7071, 0.7071, 0}, {0.5, 0.5, 0.9}};
 		GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
 		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
 		GzLight	ambientlight = { {0, 0, 0}, {0.3, 0.3, 0.3} };*/
-		GzLight	light1 = { {0.7071, 0.0, -0.7071}, {0, 0, 0} };
-		GzLight	ambientlight = { {0, 0, 0}, {1, 1, 1} };
+		GzLight	light1 = { {-0.7071, 0.7071, 0}, {1.0, 1.0, 1.0} };
+		GzLight	light2 = { {0, -0.7071, -0.7071}, {1.0, 1.0, 1.0} };
+		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {1.0, 1.0, 1.0} };
+		GzLight	ambientlight = { {0, 0, 0}, {0.3, 0.3, 0.3} };
 
 		/* Material property */
 		GzColor specularCoefficient = { 0.3, 0.3, 0.3 };
@@ -318,12 +290,11 @@ int Application5::Initialize()
 		 */
 		nameListLights[0] = GZ_DIRECTIONAL_LIGHT;
 		valueListLights[0] = (GzPointer)&light1;
-		/*nameListLights[1] = GZ_DIRECTIONAL_LIGHT;
-		
+		nameListLights[1] = GZ_DIRECTIONAL_LIGHT;
 		valueListLights[1] = (GzPointer)&light2;
 		nameListLights[2] = GZ_DIRECTIONAL_LIGHT;
-		valueListLights[2] = (GzPointer)&light3;*/
-		status |= m_pRender[i]->GzPutAttribute(1, nameListLights, valueListLights);
+		valueListLights[2] = (GzPointer)&light3;
+		status |= m_pRender[i]->GzPutAttribute(3, nameListLights, valueListLights);
 
 		nameListLights[0] = GZ_AMBIENT_LIGHT;
 		valueListLights[0] = (GzPointer)&ambientlight;
@@ -357,7 +328,21 @@ int Application5::Initialize()
 #else
 		valueListShader[5] = (GzPointer)(tex_fun);	/* or use ptex_fun */
 #endif
-		status |= m_pRender[i]->GzPutAttribute(6, nameListShader, valueListShader);
+		nameListShader[6] = GZ_TEXTURE_NORMAL_MAP;
+#if 0   /* set up null texture function or valid pointer */
+		valueListShader[6] = (GzPointer)0;
+#else
+		valueListShader[6] = (GzPointer)(tex_norm_fun);	/* or use ptex_fun */
+#endif
+		nameListShader[7] = GZ_TEXTURE_DISPLACEMENT_MAP;
+#if 0   /* set up null texture function or valid pointer */
+		valueListShader[7] = (GzPointer)0;
+#else
+		valueListShader[7] = (GzPointer)(tex_displacement_fun);	/* or use ptex_fun */
+#endif
+		status |= m_pRender[i]->GzPutAttribute(8, nameListShader, valueListShader);
+
+		
 
 		// shift amounts
 		float shiftX = 0.0f;
@@ -376,9 +361,7 @@ int Application5::Initialize()
 
 		status |= m_pRender[i]->GzPutAttribute(2, nameListOffset, valueListOffset);
 
-		//status |= m_pRender[i]->GzPushMatrix(scale);
-		//status |= m_pRender[i]->GzPushMatrix(rotateY);
-		//status |= m_pRender[i]->GzPushMatrix(rotateX);
+		
 	}
 
 	m_pFrameBuffer = m_pRender[AAKERNEL_SIZE]->framebuffer;
@@ -391,8 +374,69 @@ int Application5::Initialize()
 		return(GZ_SUCCESS);
 }
 
-int Application5::Render() 
+int Application5::Render()
 {
+
+	
+
+
+
+	GzMatrix	scale =
+	{
+		3.25,	0.0,	0.0,	10.0,
+		0.0,	3.25,	0.0,	10,
+		0.0,	0.0,	3.25,	50,
+		0.0,	0.0,	0.0,	1.0
+	};
+
+	int degree = 250;
+	GzMatrix rotateX =
+	{
+		1.0, 0.0, 0.0, 0.0,
+		0.0, cos(degree * PI / 180), -sin(degree * PI / 180), 0.0,
+		0.0, sin(degree * PI / 180), cos(degree * PI / 180), 0.0,
+		0.0, 0.0, 0.0, 1.0
+	};
+	degree = 60;
+	GzMatrix rotateY =
+	{
+		cos(degree * PI / 180), 0.0, sin(degree * PI / 180), 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		-sin(degree * PI / 180), 0.0, cos(degree * PI / 180), 0.0,
+		0.0, 0.0, 0.0, 1.0
+	};
+	degree = 30;
+	GzMatrix rotateZ =
+	{
+		cos(degree * PI / 180), -sin(degree * PI / 180), 0.0, 0.0,
+		sin(degree * PI / 180), cos(degree * PI / 180), 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 1.0
+	};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
 	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
 	GzCoord		vertexList[3];	/* vertex position coordinates */
@@ -406,6 +450,7 @@ int Application5::Render()
 	for (int i = 0; i <= AAKERNEL_SIZE; i++)
 	{
 		status |= m_pRender[i]->GzDefault();  /* init for new frame */
+
 
 		/*
 		* Tokens associated with triangle vertex values
@@ -422,13 +467,17 @@ int Application5::Render()
 			return GZ_FAILURE;
 		}
 
+		status |= m_pRender[i]->GzPushMatrix(scale);
+		status |= m_pRender[i]->GzPushMatrix(rotateY);
+		status |= m_pRender[i]->GzPushMatrix(rotateX);
+
+
+
 		/*
 		* Walk through the list of triangles, set color
 		* and render each triangle
 		*/
-
-		/*
-		while (fscanf(infile, "%s", dummy) == 1) { 	
+		while (fscanf(infile, "%s", dummy) == 1) { 	/* read in tri word */
 			fscanf(infile, "%f %f %f %f %f %f %f %f",
 				&(vertexList[0][0]), &(vertexList[0][1]),
 				&(vertexList[0][2]),
@@ -448,16 +497,25 @@ int Application5::Render()
 				&(normalList[2][2]),
 				&(uvList[2][0]), &(uvList[2][1]));
 
-			
+			/*
+			 * Set the value pointers to the first vertex of the
+			 * triangle, then feed it to the renderer
+			 * NOTE: this sequence matches the nameList token sequence
+			 */
 			valueListTriangle[0] = (GzPointer)vertexList;
 			valueListTriangle[1] = (GzPointer)normalList;
 			valueListTriangle[2] = (GzPointer)uvList;
+			m_pRender[i]->SetBumpMappingType(2);
 			m_pRender[i]->GzPutTriangle(3, nameListTriangle, valueListTriangle);
-		}*/
-		for(int b = 0; b < NUM_BILLBOARDS; b++)
+		}
+		m_pRender[i]->GzPopMatrix();
+		m_pRender[i]->GzPopMatrix();
+		m_pRender[i]->GzPopMatrix();
+		
+
+
+		for (int b = 0; b < NUM_BILLBOARDS; b++)
 			billboards[b].BillboardDraw(m_pRender[i]);
-
-
 		/*
 		* Close file
 		*/
