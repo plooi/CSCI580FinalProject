@@ -1363,6 +1363,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 						// Texture UV Mapping
 						GzCoord norm_map_ModelSpace, norm_map_ImageSpace;
+						GzCoord perturbed_norm_map_image;
 
 
 						////Println("W");
@@ -1439,6 +1440,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 								// Mode 0: Pure Normal Mapping
 								// Mode 1: Parallax Mapping
 								// Mode 2: Steep Parallax Mapping
+								// Mode 3: Bump Mapping
 								//int bumpMappingType = 2;
 								//Println("WWW");
 								if (bumpMappingType == 1)
@@ -1480,6 +1482,86 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 										currentLayerDepth += layerDepth;
 									}
 								}
+								else if (bumpMappingType == 3)
+								{
+									// -- Bump mapping perturbation calculation -- 
+									// Reference paper: SIMULATION OF WRINKLED SURFACES, James F. Blinn
+									// https://dl.acm.org/doi/pdf/10.1145/965139.507101
+
+									// original interpolated normal vector in image space
+									GzCoord norm_interp_image = { norm_X_interp, norm_Y_interp, norm_Z_interp };
+
+									// Transform normal from image space to tangent space for perturbation map calculation
+									// Image Space -> Model Space -> Tangent Space
+									GzCoord norm_interp_model, norm_interp_tangent;
+									MatrixMulVector(norm_interp_model, Image2Model, norm_interp_image, 0);
+									normalizeVector(norm_interp_model);
+									MatrixMulVector(norm_interp_tangent, Inv_TBN, norm_interp_model, 0);
+									normalizeVector(norm_interp_tangent);
+
+									GzColor bump_upluse_v; // tex_bump_fun(u+e,v)
+									GzColor bump_uminuse_v; // tex_bump_fun(u-e,v)
+									GzColor bump_u_vpluse; // tex_bump_fun(u,v+e)
+									GzColor bump_u_vminuse; // tex_bump_fun(u,v-e)
+									GzCoord perturb_map; // perturbation map
+
+									float e = 0.0156f; // ~1/64 
+
+									// Read neigboring textures +e, -e amount
+									tex_displacement_fun(u_interp + e, v_interp, bump_upluse_v);
+									tex_displacement_fun(u_interp - e, v_interp, bump_uminuse_v);
+									tex_displacement_fun(u_interp, v_interp + e, bump_u_vpluse);
+									tex_displacement_fun(u_interp, v_interp - e, bump_u_vminuse);
+
+									// Bring the range to -1 to 1
+									bump_upluse_v[0] = 2.0 * bump_upluse_v[0] - 1.0;
+									bump_upluse_v[1] = 2.0 * bump_upluse_v[1] - 1.0;
+									bump_upluse_v[2] = 2.0 * bump_upluse_v[2] - 1.0;
+
+									bump_uminuse_v[0] = 2.0 * bump_uminuse_v[0] - 1.0;
+									bump_uminuse_v[1] = 2.0 * bump_uminuse_v[1] - 1.0;
+									bump_uminuse_v[2] = 2.0 * bump_uminuse_v[2] - 1.0;
+
+									bump_u_vpluse[0] = 2.0 * bump_u_vpluse[0] - 1.0;
+									bump_u_vpluse[1] = 2.0 * bump_u_vpluse[1] - 1.0;
+									bump_u_vpluse[2] = 2.0 * bump_u_vpluse[2] - 1.0;
+
+									bump_u_vminuse[0] = 2.0 * bump_u_vminuse[0] - 1.0;
+									bump_u_vminuse[1] = 2.0 * bump_u_vminuse[1] - 1.0;
+									bump_u_vminuse[2] = 2.0 * bump_u_vminuse[2] - 1.0;
+
+									GzColor Fu;
+									GzColor Fv;
+									Fu[0] = (bump_upluse_v[0] - bump_uminuse_v[0]) / (2 * e);
+									Fu[1] = (bump_upluse_v[1] - bump_uminuse_v[1]) / (2 * e);
+									Fu[2] = (bump_upluse_v[2] - bump_uminuse_v[2]) / (2 * e);
+									Fv[0] = (bump_u_vpluse[0] - bump_u_vminuse[0]) / (2 * e);
+									Fv[1] = (bump_u_vpluse[1] - bump_u_vminuse[1]) / (2 * e);
+									Fv[2] = (bump_u_vpluse[2] - bump_u_vminuse[2]) / (2 * e);
+
+									GzCoord NcrossPv;
+									GzCoord NcrossPu;
+									crossProduct(norm_interp_tangent, Bitangent, NcrossPv);
+									crossProduct(norm_interp_tangent, Tangent, NcrossPu);
+
+									perturb_map[0] = Fu[0] * NcrossPv[0] - Fv[0] * NcrossPu[0];
+									perturb_map[1] = Fu[1] * NcrossPv[1] - Fv[1] * NcrossPu[1];
+									perturb_map[2] = Fu[2] * NcrossPv[2] - Fv[2] * NcrossPu[2];
+
+									GzCoord perturbed_norm_map_tangent;
+									perturbed_norm_map_tangent[0] = norm_interp_tangent[0] + perturb_map[0];
+									perturbed_norm_map_tangent[1] = norm_interp_tangent[1] + perturb_map[1];
+									perturbed_norm_map_tangent[2] = norm_interp_tangent[2] + perturb_map[2];
+									normalizeVector(perturbed_norm_map_tangent);
+
+									GzCoord perturbed_norm_map_model;
+									//Transform new normals from tangent space to model space
+									MatrixMulVector(perturbed_norm_map_model, TBN, perturbed_norm_map_tangent, 0);
+									normalizeVector(perturbed_norm_map_model);
+									//Transform new normals from model space to image space
+									MatrixMulVector(perturbed_norm_map_image, Xnorm[matlevel], perturbed_norm_map_model, 0);
+									normalizeVector(perturbed_norm_map_image);
+								}
 							}
 							//Println("XXX");
 							if (!(u_interp > 1.0 || v_interp > 1.0 || u_interp < 0.0 || v_interp < 0.0))
@@ -1501,7 +1583,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 
 
-							if (bumpMappingType >= 0)
+							if (bumpMappingType >= 0 && bumpMappingType < 3)
 							{
 								/*Load new normals from texture normal map*/
 								GzColor norm_temp, norm_map;
@@ -1525,6 +1607,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 								MatrixMulVector(norm_map_ImageSpace, Xnorm[matlevel], norm_map_ModelSpace, 0);
 								////Println("ZZZ");
 								normalizeVector(norm_map_ImageSpace);
+							}
+							else if (bumpMappingType == 3)
+							{
+								norm_map_ImageSpace[0] = perturbed_norm_map_image[0];
+								norm_map_ImageSpace[1] = perturbed_norm_map_image[1];
+								norm_map_ImageSpace[2] = perturbed_norm_map_image[2];
 							}
 						}
 
