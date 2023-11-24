@@ -1530,11 +1530,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 
 						// calculate color based on interpolated normals
 						GzColor norm_intensity = { 0.0f };
-#if 0 /*Without normal mapping*/
-						GzCoord norm_interp = { norm_X_interp, norm_Y_interp, norm_Z_interp };
-#else /*With normal mapping*/
-						GzCoord norm_interp = { norm_map_ImageSpace[0], norm_map_ImageSpace[1], norm_map_ImageSpace[2] };
-#endif
+
+						GzCoord norm_interp;
+
+						if(bumpMappingType == -1)
+							//norm_interp = { norm_X_interp, norm_Y_interp, norm_Z_interp };
+							SetVector3(norm_interp, norm_X_interp, norm_Y_interp, norm_Z_interp);
+						else
+							//norm_interp = { norm_map_ImageSpace[0], norm_map_ImageSpace[1], norm_map_ImageSpace[2] };
+							SetVector3(norm_interp, norm_map_ImageSpace[0], norm_map_ImageSpace[1], norm_map_ImageSpace[2]);
+
 						normalizeVector(norm_interp);
 						calculateLightingColor(norm_interp, Ka, Kd, Ks, ambientlight, lights, numlights, spec, norm_intensity);
 

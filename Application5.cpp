@@ -64,14 +64,14 @@ int Application5::Initialize()
 	Billboard bill;//create a billboard that will show the teapot in its original orientation
 	Billboard myOtherBB;//create a billboard that will show the teapot rotated horizontally
 	Billboard topView;//create a billboard that will show the teapot rotated vertically
-	Println("A");
+	//Println("A");
 
 
 
 	//load the teapot model and store all that information in an object
 	Model model;
 	model.Load("justthepot.asc");
-	Println("B");
+	//Println("B");
 
 	//put the model parameters into buffers
 	int numTriangles = model.numTriangles;
@@ -85,7 +85,7 @@ int Application5::Initialize()
 	GzTextureStruct texture;
 	texture.InitFromPPMFile("texture");
 
-	Println("C");
+	//Println("C");
 	//what do we want the resolution of the billboard image to be?
 	int billboardWidthPixels = 165;
 	int billboardHeightPixels = 165;
@@ -125,19 +125,19 @@ int Application5::Initialize()
 		0,//model vertical rotation before being rendered onto the billboard (in radians)
 		0//model horizontal rotation before being rendered onto the billboard (in radians)
 	);
-	Println("D");
+	//Println("D");
 
-	bill.SetDimensions(2, 2);//the billboard will be scaled up to be 2x2 units in world space when rendered
-	bill.SetRotation(3.14/4, 0);//the billboard itself will not be rotated 
+	bill.SetDimensions(20, 20);//the billboard will be scaled up to be this amount units in world space when rendered
+	bill.SetRotation(0, -3.14 / 4);//the billboard itself will be rotated by this amount
 
 	//the billboard will be rendered near the origin of the scene
 	GzCoord loc;
-	SetVector3(loc, 6, 0, 6);
+	SetVector3(loc, 6, -1, 6);
 	bill.SetLocation(loc);
 
 
-	Println("E");
-
+	//Println("E");
+	
 	//Repeat the process for two more billboards
 
 	myOtherBB.CreateFromModel(
@@ -158,11 +158,11 @@ int Application5::Initialize()
 		0,
 		3.14 / 2
 	);
-	myOtherBB.SetDimensions(2.5, 2.5);
+	myOtherBB.SetDimensions(15, 15);
 	myOtherBB.SetRotation(0, 0);
 	SetVector3(loc, -1, 0, 0);
 	myOtherBB.SetLocation(loc);
-	Println("F");
+	//Println("F");
 
 	topView.CreateFromModel(
 		numTriangles,
@@ -182,20 +182,20 @@ int Application5::Initialize()
 		-3.14 / 2,
 		0
 	);
-	topView.SetDimensions(2.5, 2.5);
+	topView.SetDimensions(15, 15);
 	topView.SetRotation(0, 0);
 	SetVector3(loc, 0, -1, 0);
 	topView.SetLocation(loc);
 	///////////////////////////////
-	Println("G");
-
+	//Println("G");
+	
 	//add billboards to an array of billboards, and all billboards in this array will be rendered
 	billboards[0] = bill;
 	billboards[1] = myOtherBB;
 	billboards[2] = topView;
 
 
-	Println("H");
+	//Println("H");
 
 
 	
@@ -241,69 +241,9 @@ int Application5::Initialize()
 		m_pRender[i]->GzDefault();
 
 		/* Translation matrix */
-		/*GzMatrix	scale =
-		{
-			3.25,	0.0,	0.0,	0.0,
-			0.0,	3.25,	0.0,	-3.25,
-			0.0,	0.0,	3.25,	3.5,
-			0.0,	0.0,	0.0,	1.0
-		};*/
+		
+		
 
-		/*GzMatrix	scale =
-		{
-			13.25,	0.0,	0.0,	40.0,
-			0.0,	13.25,	0.0,	70,
-			0.0,	0.0,	13.25,	220,
-			0.0,	0.0,	0.0,	1.0
-		};*/
-
-		GzMatrix	scale =
-		{
-			3.25,	0.0,	0.0,	10.0,
-			0.0,	3.25,	0.0,	10,
-			0.0,	0.0,	3.25,	50,
-			0.0,	0.0,	0.0,	1.0
-		};
-
-		/*GzMatrix	rotateX =
-		{
-			1.0,	0.0,	0.0,	0.0,
-			0.0,	.7071,	.7071,	0.0,
-			0.0,	-.7071,	.7071,	0.0,
-			0.0,	0.0,	0.0,	1.0
-		};*/
-		int degree = 250;
-		GzMatrix rotateX =
-		{
-			1.0, 0.0, 0.0, 0.0,
-			0.0, cos(degree * PI / 180), -sin(degree * PI / 180), 0.0,
-			0.0, sin(degree * PI / 180), cos(degree * PI / 180), 0.0,
-			0.0, 0.0, 0.0, 1.0
-		};
-		degree = 60;
-		GzMatrix rotateY =
-		{
-			cos(degree * PI / 180), 0.0, sin(degree * PI / 180), 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			-sin(degree * PI / 180), 0.0, cos(degree * PI / 180), 0.0,
-			0.0, 0.0, 0.0, 1.0
-		};
-		degree = 30;
-		GzMatrix rotateZ =
-		{
-			cos(degree * PI / 180), -sin(degree * PI / 180), 0.0, 0.0,
-			sin(degree * PI / 180), cos(degree * PI / 180), 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0
-		};
-
-		/*GzMatrix	rotateY =
-		{
-			.866,	0.0,	-0.5,	0.0,
-			0.0,	1.0,	0.0,	0.0,
-			0.5,	0.0,	.866,	0.0,
-			0.0,	0.0,	0.0,	1.0
-		};*/
 
 #if 1 	/* set up app-defined camera if desired, else use camera defaults */
 		camera.position[X] = -3;
@@ -421,9 +361,7 @@ int Application5::Initialize()
 
 		status |= m_pRender[i]->GzPutAttribute(2, nameListOffset, valueListOffset);
 
-		status |= m_pRender[i]->GzPushMatrix(scale);
-		status |= m_pRender[i]->GzPushMatrix(rotateY);
-		status |= m_pRender[i]->GzPushMatrix(rotateX);
+		
 	}
 
 	m_pFrameBuffer = m_pRender[AAKERNEL_SIZE]->framebuffer;
@@ -443,7 +381,38 @@ int Application5::Render()
 
 
 
+	GzMatrix	scale =
+	{
+		3.25,	0.0,	0.0,	10.0,
+		0.0,	3.25,	0.0,	10,
+		0.0,	0.0,	3.25,	50,
+		0.0,	0.0,	0.0,	1.0
+	};
 
+	int degree = 250;
+	GzMatrix rotateX =
+	{
+		1.0, 0.0, 0.0, 0.0,
+		0.0, cos(degree * PI / 180), -sin(degree * PI / 180), 0.0,
+		0.0, sin(degree * PI / 180), cos(degree * PI / 180), 0.0,
+		0.0, 0.0, 0.0, 1.0
+	};
+	degree = 60;
+	GzMatrix rotateY =
+	{
+		cos(degree * PI / 180), 0.0, sin(degree * PI / 180), 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		-sin(degree * PI / 180), 0.0, cos(degree * PI / 180), 0.0,
+		0.0, 0.0, 0.0, 1.0
+	};
+	degree = 30;
+	GzMatrix rotateZ =
+	{
+		cos(degree * PI / 180), -sin(degree * PI / 180), 0.0, 0.0,
+		sin(degree * PI / 180), cos(degree * PI / 180), 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 1.0
+	};
 
 
 
@@ -498,6 +467,12 @@ int Application5::Render()
 			return GZ_FAILURE;
 		}
 
+		status |= m_pRender[i]->GzPushMatrix(scale);
+		status |= m_pRender[i]->GzPushMatrix(rotateY);
+		status |= m_pRender[i]->GzPushMatrix(rotateX);
+
+
+
 		/*
 		* Walk through the list of triangles, set color
 		* and render each triangle
@@ -533,9 +508,10 @@ int Application5::Render()
 			m_pRender[i]->SetBumpMappingType(2);
 			m_pRender[i]->GzPutTriangle(3, nameListTriangle, valueListTriangle);
 		}
-
-
-
+		m_pRender[i]->GzPopMatrix();
+		m_pRender[i]->GzPopMatrix();
+		m_pRender[i]->GzPopMatrix();
+		
 
 
 		for (int b = 0; b < NUM_BILLBOARDS; b++)

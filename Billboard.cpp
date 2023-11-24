@@ -49,11 +49,11 @@ void CalculateCameraPosition(float xRotation, float yRotation, GzCoord camPositi
 
 	float camDistance = farthestPointFromOrigin-1;
 
-	Print("Camera distance for creating the billboard is "); PrintFloat(camDistance); Println("");
+	Print("Camera distance for creating the billboard is "); PrintFloat(camDistance); //Println("");
 
 	/*Print("Camera distance is ");
 	PrintFloat(camDistance);
-	Println("");*/
+	//Println("");*/
 
 
 
@@ -91,7 +91,7 @@ void CalculateCameraPosition(float xRotation, float yRotation, GzCoord camPositi
 	camPosition[Z] = z;
 
 
-	Println("HERE");
+	//Println("HERE");
 
 
 
@@ -145,7 +145,7 @@ Billboard* Billboard::CreateFromModel(
 
 	
 	cam.FOV = 90;//45;//THIS WILL DEPEND ON HOW BIG THE MODEL IS
-	Println("AA");
+	//Println("AA");
 
 	CalculateCameraPosition(xRotation, yRotation, cam.position, vertices, numTriangles*3);
 	//Print("Camera: "); PrintCoord(cam.position);
@@ -164,7 +164,7 @@ Billboard* Billboard::CreateFromModel(
 
 	renderer->GzPutCamera(cam);
 
-	Println("BB");
+	//Println("BB");
 
 
 	renderer->GzBeginRender();
@@ -185,7 +185,7 @@ Billboard* Billboard::CreateFromModel(
 
 
 	
-	Println("CC");
+	//Println("CC");
 
 	GzToken		nameListShader[9]; 	    /* shader attribute names */
 	GzPointer   valueListShader[9];		/* shader attribute pointers */
@@ -212,7 +212,7 @@ Billboard* Billboard::CreateFromModel(
 
 	renderer->SetBumpMappingType(-1);
 
-	Println("DD");
+	//Println("DD");
 
 
 	float shiftX = 0.0f;
@@ -227,7 +227,7 @@ Billboard* Billboard::CreateFromModel(
 
 	renderer->GzPutAttribute(2, nameListOffset, valueListOffset);
 
-	Println("EE");
+	//Println("EE");
 
 	
 
@@ -280,7 +280,7 @@ Billboard* Billboard::CreateFromModel(
 		renderer->GzPutTriangle(3, nameListTriangle, valueListTriangle);
 	}
 	
-	Println("FF");
+	//Println("FF");
 	
 
 
@@ -306,9 +306,9 @@ Billboard* Billboard::CreateFromModel(
 			 
 		}
 	this->texture = billboardTexture;
-	SetVector3(this->location, 0, 0, 0);
+	/*SetVector3(this->location, 0, 0, 0);
 	SetDimensions(1, 1);
-	SetRotation(0, 0);
+	SetRotation(0, 0);*/
 
 	FILE* f = fopen("result.ppm", "wb");
 	for (int x = 0; x < billboardWidthPixels; x++)
@@ -324,7 +324,7 @@ Billboard* Billboard::CreateFromModel(
 	renderer->GzFlushDisplay2File(f);
 	fclose(f);
 
-	Println("GG");
+	//Println("GG");
 	
 
 
@@ -335,9 +335,9 @@ Billboard* Billboard::CreateFromModel(
 	for (int x = 0; x < billboardWidthPixels; x++)
 		for (int y = 0; y < billboardHeightPixels; y++)
 		{
-			Print("Pixel "); PrintInt(x); Print(", "); PrintInt(y); Print(": "); PrintCoord(billboardTexture->pixels[x + y * billboardHeightPixels]); Println("");
+			Print("Pixel "); PrintInt(x); Print(", "); PrintInt(y); Print(": "); PrintCoord(billboardTexture->pixels[x + y * billboardHeightPixels]); //Println("");
 		}*/
-
+	this->readyToRender = 1;
 	return this;
 	
 	
@@ -357,7 +357,7 @@ void Billboard::DoStuff()
 void Billboard::BillboardDraw(GzRender* renderer) {
 
 	
-
+	if (this->readyToRender == 0)return;
 
 
 	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
@@ -396,7 +396,7 @@ void Billboard::BillboardDraw(GzRender* renderer) {
 	/*
 	 * rotations
 	 */
-
+	//Println("_A");
 
 	SetToZero(rotXMat);
 	SetToZero(rotYMat);
@@ -452,7 +452,7 @@ void Billboard::BillboardDraw(GzRender* renderer) {
 	 */
 
 
-
+	//Println("_B");
 	 //vertex 0
 	billboardVertices[0][0] = -(GetWidth() / 2.0f);
 	billboardVertices[0][1] = (GetHeight() / 2.0f);
@@ -486,7 +486,7 @@ void Billboard::BillboardDraw(GzRender* renderer) {
 		billboardVertices[i][Z] += this->location[Z];
 	}
 	
-
+	//Println("_C");
 
 
 	//set the texture
@@ -500,7 +500,7 @@ void Billboard::BillboardDraw(GzRender* renderer) {
 
 
 
-
+	//Println("_D");
 
 	/*
 	 * triangle values
@@ -540,17 +540,21 @@ void Billboard::BillboardDraw(GzRender* renderer) {
 			uvList[2][0] = 1;
 			uvList[2][1] = 1;
 		}
-
+		//Println("_XX");
 		valueListTriangle[0] = (GzPointer)vertexList;
 		valueListTriangle[1] = (GzPointer)normalList;
 		valueListTriangle[2] = (GzPointer)uvList;
-
+		//Println("_YY");
 
 		renderer->SetBumpMappingType(-1);
-
+		//Println("_ZZ");
 		renderer->GzPutTriangle(3, nameListTriangle, valueListTriangle);
+		//Println("_ZZZ");
 
 	}
+	//Println("_E");
+
+	
 }
 
 

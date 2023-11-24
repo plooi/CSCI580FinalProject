@@ -88,7 +88,7 @@ class Billboard
 public:
 
 
-
+	int readyToRender = 0;
 	GzTextureStruct* texture;//texture: The texture that will be drawn on this billboard
 	GzCoord location;//billboard's location in world space
 	float width;//billboard's width in world space
@@ -111,6 +111,9 @@ public:
 	xRotation of -pi/2 means the billboard is facing down
 	*/
 	float xRotation;
+
+
+
 
 
 	
@@ -152,11 +155,12 @@ public:
 		location[0] = 0;
 		location[1] = 0;
 		location[2] = 0;
-		width = 0;
-		height = 0;
+		width = 1;
+		height = 1;
 		texture = NULL;
 		yRotation = 0;
 		xRotation = 0;
+
 	}
 	Billboard(GzCoord _location, float _width, float _height, float _xRotation, float _yRotation, GzTextureStruct* _texture)
 	{
