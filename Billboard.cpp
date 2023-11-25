@@ -18,17 +18,8 @@ int billboardTextureFunction(float u, float v, GzColor color)
 	modelTexture->Sample(u, v, color);
 	return GZ_SUCCESS;
 }
-float Abs(float f)
-{
-	if (f < 0)return -f;
-	return f;
-}
 
-float Sq(float f)
-{
-	return f * f;
-}
-void CalculateCameraPosition(float xRotation, float yRotation, GzCoord camPosition, float* vertices, int numVertices)
+void Billboard::CalculateCameraPosition(float xRotation, float yRotation, GzCoord camPosition, float* vertices, int numVertices)
 {
 
 	//calculate vertical rotation
@@ -306,6 +297,11 @@ Billboard* Billboard::CreateFromModel(
 			 
 		}
 	this->texture = billboardTexture;
+
+
+	
+
+
 	/*SetVector3(this->location, 0, 0, 0);
 	SetDimensions(1, 1);
 	SetRotation(0, 0);*/
@@ -560,23 +556,3 @@ void Billboard::BillboardDraw(GzRender* renderer) {
 
 
 
-void rotateCoord(GzCoord coord, GzMatrix mat) {
-	float inVector[4];
-	float outVector[4];
-
-	for (int i = 0; i < 3; i++) {
-		inVector[i] = coord[i];
-	}
-	inVector[3] = 1;
-
-	for (int i = 0; i < 4; i++) {
-		outVector[i] = 0;
-		for (int j = 0; j < 4; j++) {
-			outVector[i] += mat[i][j] * inVector[j];
-		}
-	}
-
-	for (int i = 0; i < 3; i++) {
-		coord[i] = outVector[i] / outVector[3];
-	}
-}

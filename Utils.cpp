@@ -284,3 +284,41 @@ void GzTextureStruct::Sample(float u, float v, GzColor dest)
 
 GzTextureStruct* LoadTexture(char* textureFile) { return (new GzTextureStruct())->InitFromPPMFile(textureFile); }
 Model* LoadModel(char* fileName) { return (new Model())->Load(fileName); }
+
+
+
+
+
+
+
+float Abs(float f)
+{
+	if (f < 0)return -f;
+	return f;
+}
+
+float Sq(float f)
+{
+	return f * f;
+}
+
+void rotateCoord(GzCoord coord, GzMatrix mat) {
+	float inVector[4];
+	float outVector[4];
+
+	for (int i = 0; i < 3; i++) {
+		inVector[i] = coord[i];
+	}
+	inVector[3] = 1;
+
+	for (int i = 0; i < 4; i++) {
+		outVector[i] = 0;
+		for (int j = 0; j < 4; j++) {
+			outVector[i] += mat[i][j] * inVector[j];
+		}
+	}
+
+	for (int i = 0; i < 3; i++) {
+		coord[i] = outVector[i] / outVector[3];
+	}
+}

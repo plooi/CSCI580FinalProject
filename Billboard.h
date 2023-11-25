@@ -124,7 +124,7 @@ public:
 	Renders the given model with the given parameters, and then assigns the output image to this billboard's 
 	texture field
 	*/
-	Billboard* CreateFromModel(
+	virtual Billboard* CreateFromModel(
 		int numTriangles,
 		float* vertices,
 		float* uvs,
@@ -146,7 +146,7 @@ public:
 
 	
 
-	void BillboardDraw(GzRender* renderer);
+	virtual void BillboardDraw(GzRender* renderer);
 	
 
 
@@ -184,6 +184,6 @@ public:
 	void SetDimensions(float width, float height) { this->width = width; this->height = height; }
 	
 
-
+	virtual void CalculateCameraPosition(float xRotation, float yRotation, GzCoord camPosition, float* vertices, int numVertices);
 };
 

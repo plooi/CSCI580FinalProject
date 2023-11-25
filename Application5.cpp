@@ -13,6 +13,7 @@
 #include "rend.h"
 #include "Utils.h"
 #include "Billboard.h"
+#include "BumpBillboard.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -34,8 +35,8 @@ void shade(GzCoord norm, GzCoord color);
 
 
 
-#define NUM_BILLBOARDS 3
-Billboard billboards[NUM_BILLBOARDS];
+#define NUM_BILLBOARDS 1
+BumpBillboard billboards[NUM_BILLBOARDS];
 
 float AAFilter[AAKERNEL_SIZE][3] 		/* X-shift, Y-shift, weight */
 {
@@ -59,11 +60,11 @@ Application5::~Application5()
 
 int Application5::Initialize()
 {
-	
+
 	PrintingInit();
-	Billboard bill;//create a billboard that will show the teapot in its original orientation
-	Billboard myOtherBB;//create a billboard that will show the teapot rotated horizontally
-	Billboard topView;//create a billboard that will show the teapot rotated vertically
+	BumpBillboard bill;//create a billboard that will show the teapot in its original orientation
+	BumpBillboard myOtherBB;//create a billboard that will show the teapot rotated horizontally
+	BumpBillboard topView;//create a billboard that will show the teapot rotated vertically
 	//Println("A");
 
 
@@ -94,9 +95,9 @@ int Application5::Initialize()
 	//onto the billboard
 	GzLight ambientLight;
 	SetVector3(ambientLight.direction, 0, 0, 0);
-	SetVector3(ambientLight.color, .1, .1, .1);
+	SetVector3(ambientLight.color, .5, .5, .5);
 	GzLight lights[1];
-	SetVector3(lights[0].color, .7f, 0.7f, 0.7f);
+	SetVector3(lights[0].color, 0, 0, 0);
 	SetVector3(lights[0].direction, -1, 0, -1);
 	int numLights = 1;
 	GzColor ambientCoefficient;
@@ -127,20 +128,20 @@ int Application5::Initialize()
 	);
 	//Println("D");
 
-	bill.SetDimensions(20, 20);//the billboard will be scaled up to be this amount units in world space when rendered
-	bill.SetRotation(0, -3.14 / 4);//the billboard itself will be rotated by this amount
+	bill.SetDimensions(10, 10);//the billboard will be scaled up to be this amount units in world space when rendered
+	bill.SetRotation(3.14/6, 0);//the billboard itself will be rotated by this amount
 
 	//the billboard will be rendered near the origin of the scene
 	GzCoord loc;
-	SetVector3(loc, 6, -1, 6);
+	SetVector3(loc, 0, 0, 0);
 	bill.SetLocation(loc);
 
 
 	//Println("E");
-	
+
 	//Repeat the process for two more billboards
 
-	myOtherBB.CreateFromModel(
+	/*myOtherBB.CreateFromModel(
 		numTriangles,
 		vertices,
 		uvs,
@@ -185,20 +186,20 @@ int Application5::Initialize()
 	topView.SetDimensions(15, 15);
 	topView.SetRotation(0, 0);
 	SetVector3(loc, 0, -1, 0);
-	topView.SetLocation(loc);
+	topView.SetLocation(loc);*/
 	///////////////////////////////
 	//Println("G");
-	
+
 	//add billboards to an array of billboards, and all billboards in this array will be rendered
 	billboards[0] = bill;
-	billboards[1] = myOtherBB;
-	billboards[2] = topView;
+	//billboards[1] = myOtherBB;
+	//billboards[2] = topView;
 
 
 	//Println("H");
 
 
-	
+
 
 
 
@@ -241,20 +242,20 @@ int Application5::Initialize()
 		m_pRender[i]->GzDefault();
 
 		/* Translation matrix */
-		
-		
+
+
 
 
 #if 1 	/* set up app-defined camera if desired, else use camera defaults */
-		camera.position[X] = -3;
-		camera.position[Y] = -25;
-		camera.position[Z] = -4;
+		camera.position[X] = 0;
+		camera.position[Y] = 0;
+		camera.position[Z] = -10;
 
-		camera.lookat[X] = 7.8;
-		camera.lookat[Y] = 0.7;
-		camera.lookat[Z] = 6.5;
+		camera.lookat[X] = 0;
+		camera.lookat[Y] = 0;
+		camera.lookat[Z] = 0;
 
-		camera.worldup[X] = -0.2;
+		camera.worldup[X] = 0;
 		camera.worldup[Y] = 1.0;
 		camera.worldup[Z] = 0.0;
 
@@ -342,7 +343,7 @@ int Application5::Initialize()
 #endif
 		status |= m_pRender[i]->GzPutAttribute(8, nameListShader, valueListShader);
 
-		
+
 
 		// shift amounts
 		float shiftX = 0.0f;
@@ -361,7 +362,7 @@ int Application5::Initialize()
 
 		status |= m_pRender[i]->GzPutAttribute(2, nameListOffset, valueListOffset);
 
-		
+
 	}
 
 	m_pFrameBuffer = m_pRender[AAKERNEL_SIZE]->framebuffer;
@@ -377,7 +378,7 @@ int Application5::Initialize()
 int Application5::Render()
 {
 
-	
+
 
 
 
@@ -467,9 +468,7 @@ int Application5::Render()
 			return GZ_FAILURE;
 		}
 
-		status |= m_pRender[i]->GzPushMatrix(scale);
-		status |= m_pRender[i]->GzPushMatrix(rotateY);
-		status |= m_pRender[i]->GzPushMatrix(rotateX);
+
 
 
 
@@ -477,7 +476,10 @@ int Application5::Render()
 		* Walk through the list of triangles, set color
 		* and render each triangle
 		*/
-		while (fscanf(infile, "%s", dummy) == 1) { 	/* read in tri word */
+		/*status |= m_pRender[i]->GzPushMatrix(scale);
+		status |= m_pRender[i]->GzPushMatrix(rotateY);
+		status |= m_pRender[i]->GzPushMatrix(rotateX);*/
+		/*while (fscanf(infile, "%s", dummy) == 1) { 	// read in tri word
 			fscanf(infile, "%f %f %f %f %f %f %f %f",
 				&(vertexList[0][0]), &(vertexList[0][1]),
 				&(vertexList[0][2]),
@@ -497,11 +499,7 @@ int Application5::Render()
 				&(normalList[2][2]),
 				&(uvList[2][0]), &(uvList[2][1]));
 
-			/*
-			 * Set the value pointers to the first vertex of the
-			 * triangle, then feed it to the renderer
-			 * NOTE: this sequence matches the nameList token sequence
-			 */
+
 			valueListTriangle[0] = (GzPointer)vertexList;
 			valueListTriangle[1] = (GzPointer)normalList;
 			valueListTriangle[2] = (GzPointer)uvList;
@@ -510,8 +508,8 @@ int Application5::Render()
 		}
 		m_pRender[i]->GzPopMatrix();
 		m_pRender[i]->GzPopMatrix();
-		m_pRender[i]->GzPopMatrix();
-		
+		m_pRender[i]->GzPopMatrix();*/
+
 
 
 		for (int b = 0; b < NUM_BILLBOARDS; b++)

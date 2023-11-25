@@ -17,6 +17,8 @@
 #define	MATLEVELS	100		/* how many matrix pushes allowed */
 #define	MAX_LIGHTS	10		/* how many lights allowed */
 
+#define BUMP_MAPPING_NUM_LAYERS 20//10
+
 class GzRender {			/* define a renderer */
 
 
@@ -42,9 +44,14 @@ public:
 	GzTexture		tex_norm_fun;
 	GzTexture       tex_displacement_fun;
 
+	
 
+	float bumpMappingScale = 2;
 	int bumpMappingType = 0;
 	void SetBumpMappingType(int i);
+	void SetBumpMappingScale(float scale);
+	
+
 
 	// HW 6
 	float Xoffset;
@@ -61,6 +68,7 @@ public:
 	int GzDefault();
 	int GzDefault(int backgroundR, int backgroundG, int backgroundB);
 	int GzBeginRender();
+	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z, float* normal);
 	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
 	int GzGet(int i, int j, GzIntensity* r, GzIntensity* g, GzIntensity* b, GzIntensity* a, GzDepth* z);
 

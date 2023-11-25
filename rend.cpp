@@ -638,7 +638,23 @@ int GzRender::GzPopMatrix()
 	}
 
 }
+int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z, float* normal)
+{
+	if (i < xres && i >= 0 && j < yres && j >= 0)
+	{
+		pixelbuffer[ARRAY(i, j)].red = r;
+		pixelbuffer[ARRAY(i, j)].green = g;
+		pixelbuffer[ARRAY(i, j)].blue = b;
+		pixelbuffer[ARRAY(i, j)].alpha = a;
+		pixelbuffer[ARRAY(i, j)].z = z;
+		pixelbuffer[ARRAY(i, j)].normal[0] = normal[0];
+		pixelbuffer[ARRAY(i, j)].normal[1] = normal[1];
+		pixelbuffer[ARRAY(i, j)].normal[2] = normal[2];
+	}
+		
 
+	return GZ_SUCCESS;
+}
 int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z)
 {
 	/* HW1.4 write pixel values into the buffer */
@@ -1084,6 +1100,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 	{
 		for (int pixel_y = max(box_minY, 0); (pixel_y <= box_maxY && pixel_y < yres); pixel_y++)
 		{
+			//create buffer to store what the normal for this pixel is
+			GzCoord pixelNormal; 
+			SetVector3(pixelNormal, 0, 0, 0);
+
+
 			// Evaluate the edge line equation at pixel i,j
 			float edge1_eval = edge1_param[0] * (float)pixel_x + edge1_param[1] * (float)pixel_y + edge1_param[2];
 			float edge2_eval = edge2_param[0] * (float)pixel_x + edge2_param[1] * (float)pixel_y + edge2_param[2];
@@ -1434,7 +1455,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 								tex_displacement_fun(u_interp, v_interp, height);
 								// Play around with the value of scale to check out different bump mapping effects. 
 								// A higher scale makes the bumps stand out more, but go too big, and you might notice some distortion in the bump map
-								float scale = 2;
+								float scale = this->bumpMappingScale;// 2;
 								float p[2];
 
 								// Mode 0: Pure Normal Mapping
@@ -1457,7 +1478,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 									// Steep Parallax Mapping
 									float deltaTexCoords[2];
 									// number of depth layers
-									float numLayers = 10;
+									float numLayers = BUMP_MAPPING_NUM_LAYERS;// 20;//10;
 									// calculate the size of each layer
 									float layerDepth = 1.0 / numLayers;
 									// depth of current layer
@@ -1481,6 +1502,24 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 										// get depth of next layer
 										currentLayerDepth += layerDepth;
 									}
+									float prevTexCoords[2];
+									prevTexCoords[0] = u_interp + deltaTexCoords[0];
+									prevTexCoords[1] = v_interp + deltaTexCoords[1];
+									// get depth after and before collision for linear interpolation
+									float afterDepth = currentDepthMapValue - currentLayerDepth;
+									tex_displacement_fun(prevTexCoords[0], prevTexCoords[1], height);
+									float beforeDepth = height[0] - currentLayerDepth + layerDepth;
+									// interpolation of texture coordinates
+									float weight = afterDepth / (afterDepth - beforeDepth);
+									float finalTexCoords[2];
+
+									finalTexCoords[0] = prevTexCoords[0] * weight + u_interp * (1.0 - weight);
+									finalTexCoords[1] = prevTexCoords[1] * weight + v_interp * (1.0 - weight);
+									u_interp = finalTexCoords[0];
+									v_interp = finalTexCoords[1];
+
+
+
 								}
 								else if (bumpMappingType == 3)
 								{
@@ -1566,6 +1605,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 							//Println("XXX");
 							if (!(u_interp > 1.0 || v_interp > 1.0 || u_interp < 0.0 || v_interp < 0.0))
 								tex_fun(u_interp, v_interp, uv_color);
+							else
+								SetVector3(uv_color, -1, -1, -1);
+
 
 							//Println("YYY");
 							if (uv_color[0] == -1 && uv_color[1] == -1 && uv_color[2] == -1)
@@ -1635,11 +1677,14 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 						g = ctoi(norm_intensity[1]);
 						b = ctoi(norm_intensity[2]);
 
+						SetVector3(pixelNormal, norm_interp[0], norm_interp[1], norm_interp[2]);
+
 						break;
 					}
 					}
 					// Pass the values to the buffer
-					GzPut(pixel_x, pixel_y, r, g, b, a, (int)z_interp);
+					GzPut(pixel_x, pixel_y, r, g, b, a, (int)z_interp, pixelNormal);
+
 				}
 			}
 
@@ -2094,4 +2139,9 @@ void clampColor(GzColor col)
 void GzRender::SetBumpMappingType(int b)
 {
 	bumpMappingType = b;
+}
+
+void GzRender::SetBumpMappingScale(float scale)
+{
+	this->bumpMappingScale = scale;
 }

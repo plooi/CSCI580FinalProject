@@ -251,6 +251,12 @@ GzTextureStruct* LoadTexture(char* textureFile);
 
 
 
+float Abs(float f);
+
+float Sq(float f);
+
+void rotateCoord(GzCoord coord, GzMatrix mat);
+
 
 
 #endif

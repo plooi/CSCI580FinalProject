@@ -115,6 +115,7 @@ typedef	struct {
 	GzIntensity    blue;
 	GzIntensity    alpha;
 	GzDepth	 z;
+	GzCoord normal;
 } GzPixel;
 #define GZ_PIXEL
 #endif;
