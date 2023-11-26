@@ -1440,7 +1440,8 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 								// Mode 0: Pure Normal Mapping
 								// Mode 1: Parallax Mapping
 								// Mode 2: Steep Parallax Mapping
-								// Mode 3: Bump Mapping
+								// Mode 3: Bump Mapping (Blinn's paper)
+								// Mode 4: Bump Mapping (Sobel filter)
 								//int bumpMappingType = 2;
 								//Println("WWW");
 								if (bumpMappingType == 1)
@@ -1548,10 +1549,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 									perturb_map[1] = Fu[1] * NcrossPv[1] - Fv[1] * NcrossPu[1];
 									perturb_map[2] = Fu[2] * NcrossPv[2] - Fv[2] * NcrossPu[2];
 
+									// this is to change the effect of perturbation on the normal map
+									float scalep = 0.1f;
+
 									GzCoord perturbed_norm_map_tangent;
-									perturbed_norm_map_tangent[0] = norm_interp_tangent[0] + perturb_map[0];
-									perturbed_norm_map_tangent[1] = norm_interp_tangent[1] + perturb_map[1];
-									perturbed_norm_map_tangent[2] = norm_interp_tangent[2] + perturb_map[2];
+									perturbed_norm_map_tangent[0] = norm_interp_tangent[0] + scalep * perturb_map[0];
+									perturbed_norm_map_tangent[1] = norm_interp_tangent[1] + scalep * perturb_map[1];
+									perturbed_norm_map_tangent[2] = norm_interp_tangent[2] + scalep * perturb_map[2];
 									normalizeVector(perturbed_norm_map_tangent);
 
 									GzCoord perturbed_norm_map_model;
@@ -1561,6 +1565,58 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 									//Transform new normals from model space to image space
 									MatrixMulVector(perturbed_norm_map_image, Xnorm[matlevel], perturbed_norm_map_model, 0);
 									normalizeVector(perturbed_norm_map_image);
+								}
+								else if(bumpMappingType == 4)
+								{
+									// creating a normal map from the height map
+									// similar to the demo at https://cpetry.github.io/NormalMap-Online/
+									
+									// you can play with these variables to change the normal map's effect
+									// functionalities are similar to the ones in the demo link above
+									float level = 7.0f;
+									float strength = 2.5f;
+
+									float dz = 1 / strength * pow(2.0f,level) / 255.0f;
+
+									GzColor tlv; // tex_bump_fun(u-e,v+e) 
+									GzColor lv; // tex_bump_fun(u-e,v)
+									GzColor blv; // tex_bump_fun(u-e,v-e)
+									GzColor tv; // tex_bump_fun(u,v+e)
+									GzColor bv; // tex_bump_fun(u,v-e) 
+									GzColor trv; // tex_bump_fun(u+e,v+e)
+									GzColor rv; // tex_bump_fun(u+e,v)
+									GzColor brv; // tex_bump_fun(u+e,v-e)
+									
+									// this value depends on the texture dimensions
+									float e = -1.0f / 4096.0f; // ~0.0039 = 1/256
+
+									// Read neigboring textures +e, -e amount
+									tex_displacement_fun(u_interp - e, v_interp + e, tlv);
+									tex_displacement_fun(u_interp - e, v_interp, lv);
+									tex_displacement_fun(u_interp - e, v_interp - e, blv);
+									tex_displacement_fun(u_interp, v_interp + e, tv);
+									tex_displacement_fun(u_interp, v_interp - e, bv);
+									tex_displacement_fun(u_interp + e, v_interp + e, trv);
+									tex_displacement_fun(u_interp + e, v_interp, rv);
+									tex_displacement_fun(u_interp + e, v_interp - e, brv);
+
+									// Calculate dx and dy with Sobel filter
+									float dx = tlv[0] + 2.0f * lv[0] + blv[0] - trv[0] - 2.0f * rv[0] - brv[0];
+									float dy = tlv[0] + 2.0f * tv[0] + trv[0] - blv[0] - 2.0f * bv[0] - brv[0];
+
+									// Perturbed normal map
+									GzCoord perturbed_norm_map_tangent;
+									SetVector3(perturbed_norm_map_tangent, dx, -dy, dz);
+									normalizeVector(perturbed_norm_map_tangent);
+
+									//Transform new normals from tangent space to model space
+									GzCoord perturbed_norm_map_model;
+									MatrixMulVector(perturbed_norm_map_model, TBN, perturbed_norm_map_tangent, 0);
+									normalizeVector(perturbed_norm_map_model);
+									//Transform new normals from model space to image space
+									MatrixMulVector(perturbed_norm_map_image, Xnorm[matlevel], perturbed_norm_map_model, 0);
+									normalizeVector(perturbed_norm_map_image);
+
 								}
 							}
 							//Println("XXX");
@@ -1608,7 +1664,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken* nameList, GzPointer* valueLis
 								////Println("ZZZ");
 								normalizeVector(norm_map_ImageSpace);
 							}
-							else if (bumpMappingType == 3)
+							else if (bumpMappingType == 3 || bumpMappingType == 4)
 							{
 								norm_map_ImageSpace[0] = perturbed_norm_map_image[0];
 								norm_map_ImageSpace[1] = perturbed_norm_map_image[1];
