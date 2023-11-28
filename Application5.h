@@ -19,6 +19,7 @@ public:
 	
 	int	Initialize();
 	virtual int Render(); 
+	
 	int Clean();
 };
 

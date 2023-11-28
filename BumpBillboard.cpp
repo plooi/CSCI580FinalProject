@@ -73,7 +73,7 @@ BumpBillboard* BumpBillboard::CreateFromModel(
 
 
 
-	cam.FOV = 90;//45;//THIS WILL DEPEND ON HOW BIG THE MODEL IS
+	cam.FOV = 30;//90;//45;//THIS WILL DEPEND ON HOW BIG THE MODEL IS
 	//Println("AA");
 
 	CalculateCameraPosition(xRotation, yRotation, cam.position, vertices, numTriangles * 3);

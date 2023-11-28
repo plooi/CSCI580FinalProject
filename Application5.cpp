@@ -14,12 +14,18 @@
 #include "Utils.h"
 #include "Billboard.h"
 #include "BumpBillboard.h"
+#include <chrono>
 
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
+
+
+float angle = 180;
+
+
 
 #define INFILE  "rect.asc"
 #define OUTFILE "output.ppm"
@@ -33,9 +39,16 @@ extern int GzFreeTexture();
 
 void shade(GzCoord norm, GzCoord color);
 
+GzTextureStruct* theeModelTexture;
+int theeBillboardTextureFunction(float u, float v, GzColor color)
+{
+	theeModelTexture->Sample(u, v, color);
+	return GZ_SUCCESS;
+}
 
 
-#define NUM_BILLBOARDS 1
+
+#define NUM_BILLBOARDS 12
 BumpBillboard billboards[NUM_BILLBOARDS];
 
 float AAFilter[AAKERNEL_SIZE][3] 		/* X-shift, Y-shift, weight */
@@ -62,10 +75,6 @@ int Application5::Initialize()
 {
 
 	PrintingInit();
-	BumpBillboard bill;//create a billboard that will show the teapot in its original orientation
-	BumpBillboard myOtherBB;//create a billboard that will show the teapot rotated horizontally
-	BumpBillboard topView;//create a billboard that will show the teapot rotated vertically
-	//Println("A");
 
 
 
@@ -88,8 +97,8 @@ int Application5::Initialize()
 
 	//Println("C");
 	//what do we want the resolution of the billboard image to be?
-	int billboardWidthPixels = 165;
-	int billboardHeightPixels = 165;
+	int billboardWidthPixels = 315;//165;
+	int billboardHeightPixels = 315;// 165;
 
 	//here we set up a bunch of rendering parameters so that the teapot can be rendered
 	//onto the billboard
@@ -107,101 +116,41 @@ int Application5::Initialize()
 	GzColor diffuseCoefficient;
 	SetVector3(diffuseCoefficient, 1, 1, 1);
 
-	//run the code to create billboard from model
-	bill.CreateFromModel(
-		numTriangles,
-		vertices,
-		uvs,
-		normals,
-		&texture,
-		billboardWidthPixels,
-		billboardHeightPixels,
-		&ambientLight,
-		lights,
-		numLights,
-		ambientCoefficient,
-		specularCoefficient,
-		diffuseCoefficient,
-		32,
-		0,//model vertical rotation before being rendered onto the billboard (in radians)
-		0//model horizontal rotation before being rendered onto the billboard (in radians)
-	);
-	//Println("D");
+	
 
-	bill.SetDimensions(10, 10);//the billboard will be scaled up to be this amount units in world space when rendered
-	bill.SetRotation(3.14/6, 0);//the billboard itself will be rotated by this amount
-
-	//the billboard will be rendered near the origin of the scene
-	GzCoord loc;
-	SetVector3(loc, 0, 0, 0);
-	bill.SetLocation(loc);
+	
 
 
-	//Println("E");
+	for (int i = 0; i < 12; i++)
+	{
+		billboards[i].CreateFromModel(numTriangles,
+			vertices,
+			uvs,
+			normals,
+			&texture,
+			billboardWidthPixels,
+			billboardHeightPixels,
+			&ambientLight,
+			lights,
+			numLights,
+			ambientCoefficient,
+			specularCoefficient,
+			diffuseCoefficient,
+			32,
+			0,//model vertical rotation before being rendered onto the billboard (in radians)
+			-i * 3.14 / 6//model horizontal rotation before being rendered onto the billboard (in radians)
+			
+		);
 
-	//Repeat the process for two more billboards
+		billboards[i].SetDimensions(10, 10);//the billboard will be scaled up to be this amount units in world space when rendered
+		billboards[i].SetRotation(i*3.14 / 6, 0);//the billboard itself will be rotated by this amount
 
-	/*myOtherBB.CreateFromModel(
-		numTriangles,
-		vertices,
-		uvs,
-		normals,
-		&texture,
-		billboardWidthPixels,
-		billboardHeightPixels,
-		&ambientLight,
-		lights,
-		numLights,
-		ambientCoefficient,
-		specularCoefficient,
-		diffuseCoefficient,
-		32,
-		0,
-		3.14 / 2
-	);
-	myOtherBB.SetDimensions(15, 15);
-	myOtherBB.SetRotation(0, 0);
-	SetVector3(loc, -1, 0, 0);
-	myOtherBB.SetLocation(loc);
-	//Println("F");
-
-	topView.CreateFromModel(
-		numTriangles,
-		vertices,
-		uvs,
-		normals,
-		&texture,
-		billboardWidthPixels,
-		billboardHeightPixels,
-		&ambientLight,
-		lights,
-		numLights,
-		ambientCoefficient,
-		specularCoefficient,
-		diffuseCoefficient,
-		32,
-		-3.14 / 2,
-		0
-	);
-	topView.SetDimensions(15, 15);
-	topView.SetRotation(0, 0);
-	SetVector3(loc, 0, -1, 0);
-	topView.SetLocation(loc);*/
-	///////////////////////////////
-	//Println("G");
-
-	//add billboards to an array of billboards, and all billboards in this array will be rendered
-	billboards[0] = bill;
-	//billboards[1] = myOtherBB;
-	//billboards[2] = topView;
-
-
-	//Println("H");
-
-
-
-
-
+		//the billboard will be rendered near the origin of the scene
+		GzCoord loc;
+		SetVector3(loc, 0, 0, 0);
+		billboards[i].SetLocation(loc);
+	}
+	
 
 
 
@@ -232,8 +181,8 @@ int Application5::Initialize()
 	/*
 	 * initialize the display and the renderer
 	 */
-	m_nWidth = 256;		// frame buffer and display width
-	m_nHeight = 256;    // frame buffer and display height
+	m_nWidth = 512;//256;		// frame buffer and display width
+	m_nHeight = 512;// 256;    // frame buffer and display height
 
 	// loop over each renderer for antialiasing
 	for (int i = 0; i <= AAKERNEL_SIZE; i++)
@@ -247,9 +196,13 @@ int Application5::Initialize()
 
 
 #if 1 	/* set up app-defined camera if desired, else use camera defaults */
-		camera.position[X] = 0;
+		//CAMERA SETUP
+
+		float CAMERA_DEGREE = angle;
+
+		camera.position[X] = 10*cos(CAMERA_DEGREE / 360 * 2 * 3.14159);
 		camera.position[Y] = 0;
-		camera.position[Z] = -10;
+		camera.position[Z] = 10 * sin(CAMERA_DEGREE / 360 * 2 * 3.14159);
 
 		camera.lookat[X] = 0;
 		camera.lookat[Y] = 0;
@@ -272,9 +225,9 @@ int Application5::Initialize()
 		GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
 		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
 		GzLight	ambientlight = { {0, 0, 0}, {0.3, 0.3, 0.3} };*/
-		GzLight	light1 = { {-0.7071, 0.7071, 0}, {1.0, 1.0, 1.0} };
-		GzLight	light2 = { {0, -0.7071, -0.7071}, {1.0, 1.0, 1.0} };
-		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {1.0, 1.0, 1.0} };
+		GzLight	light1 = { {-0.7071, 0.7071, 0}, {1, 1, 1} };
+		GzLight	light2 = { {0, -0.7071, -0.7071}, {1, 1, 1} };
+		GzLight	light3 = { {0.7071, 0.0, -0.7071}, {1, 1, 1} };
 		GzLight	ambientlight = { {0, 0, 0}, {0.3, 0.3, 0.3} };
 
 		/* Material property */
@@ -322,12 +275,12 @@ int Application5::Initialize()
 		nameListShader[4] = GZ_DISTRIBUTION_COEFFICIENT;
 		specpower = 32;
 		valueListShader[4] = (GzPointer)&specpower;
-
+		
 		nameListShader[5] = GZ_TEXTURE_MAP;
 #if 0   /* set up null texture function or valid pointer */
 		valueListShader[5] = (GzPointer)0;
 #else
-		valueListShader[5] = (GzPointer)(tex_fun);	/* or use ptex_fun */
+		valueListShader[5] = (GzPointer)(theeBillboardTextureFunction);	/* or use ptex_fun */
 #endif
 		nameListShader[6] = GZ_TEXTURE_NORMAL_MAP;
 #if 0   /* set up null texture function or valid pointer */
@@ -375,10 +328,16 @@ int Application5::Initialize()
 		return(GZ_SUCCESS);
 }
 
+
+
+
+
+
 int Application5::Render()
 {
-
-
+	//float angle;
+	
+	int testOriginalRendering = 0;
 
 
 
@@ -422,22 +381,6 @@ int Application5::Render()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
 	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
 	GzCoord		vertexList[3];	/* vertex position coordinates */
@@ -450,7 +393,11 @@ int Application5::Render()
 	/* Initialize Display for each rendered */
 	for (int i = 0; i <= AAKERNEL_SIZE; i++)
 	{
-		status |= m_pRender[i]->GzDefault();  /* init for new frame */
+			
+
+		//status |= m_pRender[i]->GzDefault();  /* init for new frame */
+		//m_pRender[i]->GzPutCamera(camForThisFrame);
+		//m_pRender[i]->GzBeginRender();
 
 
 		/*
@@ -471,56 +418,72 @@ int Application5::Render()
 
 
 
-
-		/*
-		* Walk through the list of triangles, set color
-		* and render each triangle
-		*/
-		/*status |= m_pRender[i]->GzPushMatrix(scale);
-		status |= m_pRender[i]->GzPushMatrix(rotateY);
-		status |= m_pRender[i]->GzPushMatrix(rotateX);*/
-		/*while (fscanf(infile, "%s", dummy) == 1) { 	// read in tri word
-			fscanf(infile, "%f %f %f %f %f %f %f %f",
-				&(vertexList[0][0]), &(vertexList[0][1]),
-				&(vertexList[0][2]),
-				&(normalList[0][0]), &(normalList[0][1]),
-				&(normalList[0][2]),
-				&(uvList[0][0]), &(uvList[0][1]));
-			fscanf(infile, "%f %f %f %f %f %f %f %f",
-				&(vertexList[1][0]), &(vertexList[1][1]),
-				&(vertexList[1][2]),
-				&(normalList[1][0]), &(normalList[1][1]),
-				&(normalList[1][2]),
-				&(uvList[1][0]), &(uvList[1][1]));
-			fscanf(infile, "%f %f %f %f %f %f %f %f",
-				&(vertexList[2][0]), &(vertexList[2][1]),
-				&(vertexList[2][2]),
-				&(normalList[2][0]), &(normalList[2][1]),
-				&(normalList[2][2]),
-				&(uvList[2][0]), &(uvList[2][1]));
-
-
-			valueListTriangle[0] = (GzPointer)vertexList;
-			valueListTriangle[1] = (GzPointer)normalList;
-			valueListTriangle[2] = (GzPointer)uvList;
-			m_pRender[i]->SetBumpMappingType(2);
-			m_pRender[i]->GzPutTriangle(3, nameListTriangle, valueListTriangle);
+		float* camPosition = m_pRender[0]->m_camera.position;
+		float angleToCenter;
+		if (camPosition[0] > 0)
+		{
+			angleToCenter = atan(camPosition[2] / camPosition[0]);
 		}
-		m_pRender[i]->GzPopMatrix();
-		m_pRender[i]->GzPopMatrix();
-		m_pRender[i]->GzPopMatrix();*/
+		else if (camPosition[0] < 0)
+
+			angleToCenter = atan(camPosition[2] / camPosition[0]) + 3.14f;
+		else
+			if (camPosition[2] > 0)
+				angleToCenter = 3.14 / 2;
+			else
+				angleToCenter = -3.14 / 2;
+		angleToCenter += 3.14 / 2;
+		int billboardNum = (angleToCenter + 3.14 / 12) / (3.14 / 6);
+		while (billboardNum >= 12)
+			billboardNum -= 12;
 
 
 
-		for (int b = 0; b < NUM_BILLBOARDS; b++)
-			billboards[b].BillboardDraw(m_pRender[i]);
+		///if (!testOriginalRendering)
+		billboards[billboardNum].BillboardDraw(m_pRender[i]);
+
+
+		Println("HIELLLLLOOO");
+
+
+		//billboards[0].BillboardDraw(m_pRender[i]);
+		Print("Billboard num");
+		PrintInt(billboardNum);
+		Println(" ");
+		Print("angle to center");
+		PrintFloat(angleToCenter / 6.28 * 360);
+		Println(" ");
+
 		/*
 		* Close file
 		*/
 
+
+
+
+
+
+
+
+
+
+
 		if (fclose(infile))
 			AfxMessageBox(_T("The input file was not closed\n"));
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	// temporary red, color, blue variables to save filter applied values
 	float r = 0.0f;
@@ -553,8 +516,18 @@ int Application5::Render()
 
 	}
 
+
+	char fileName[100];
+	strcpy(fileName, "output");
+	char buff[100];
+	//itoa((int)a, buff, 100);
+	sprintf(buff, "%d", angle);
+	strcat(fileName, buff);
+	strcat(fileName, ".ppm");
+	Println(buff);
+	Println(fileName);
 	FILE* outfile;
-	if ((outfile = fopen(OUTFILE, "wb")) == NULL)
+	if ((outfile = fopen(fileName, "wb")) == NULL)
 	{
 		AfxMessageBox("The output file was not opened\n");
 		return GZ_FAILURE;
@@ -566,10 +539,25 @@ int Application5::Render()
 	if (fclose(outfile))
 		AfxMessageBox(_T("The output file was not closed\n"));
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
 	if (status)
 		return(GZ_FAILURE);
 	else
 		return(GZ_SUCCESS);
+	*/
 }
 
 int Application5::Clean()

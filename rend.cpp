@@ -454,6 +454,7 @@ int GzRender::GzBeginRender()
 	- init Ximage - put Xsp at base of stack, push on Xpi and Xiw
 	- now stack contains Xsw and app can push model Xforms when needed
 	*/
+	//matlevel = 0;
 	int status = 0;
 
 	// ---- compute Xiw ----

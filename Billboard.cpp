@@ -38,7 +38,7 @@ void Billboard::CalculateCameraPosition(float xRotation, float yRotation, GzCoor
 			farthestPointFromOrigin = distance;
 	}
 
-	float camDistance = farthestPointFromOrigin-1;
+	float camDistance = (farthestPointFromOrigin-1)/.268f;
 
 	Print("Camera distance for creating the billboard is "); PrintFloat(camDistance); //Println("");
 
@@ -135,7 +135,7 @@ Billboard* Billboard::CreateFromModel(
 
 
 	
-	cam.FOV = 90;//45;//THIS WILL DEPEND ON HOW BIG THE MODEL IS
+	cam.FOV = 30;//90;//45;//THIS WILL DEPEND ON HOW BIG THE MODEL IS
 	//Println("AA");
 
 	CalculateCameraPosition(xRotation, yRotation, cam.position, vertices, numTriangles*3);
